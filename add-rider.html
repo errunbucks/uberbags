@@ -461,7 +461,83 @@
                 }
             });
         } else {
-            console.error('Google Maps API not loaded');
+            console.warn('Google Maps API not loaded, using Nominatim fallback');
+
+            // Fallback to Nominatim if Google Maps isn't available
+            let autocompleteTimeout;
+
+            addressInput.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+
+                clearTimeout(autocompleteTimeout);
+
+                if (query.length < 3) {
+                    autocompleteResults.style.display = 'none';
+                    return;
+                }
+
+                autocompleteTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`);
+                        const data = await response.json();
+
+                        if (data.length === 0) {
+                            autocompleteResults.innerHTML = '<div class="autocomplete-item" style="color: #999;">No results found</div>';
+                            autocompleteResults.style.display = 'block';
+                            return;
+                        }
+
+                        autocompleteResults.innerHTML = data.map(item => {
+                            return `
+                                <div class="autocomplete-item" data-lat="${item.lat}" data-lng="${item.lon}" data-address="${item.display_name}">
+                                    ${item.display_name}
+                                </div>
+                            `;
+                        }).join('');
+
+                        autocompleteResults.style.display = 'block';
+
+                        autocompleteResults.querySelectorAll('.autocomplete-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                const lat = parseFloat(this.dataset.lat);
+                                const lng = parseFloat(this.dataset.lng);
+                                const address = this.dataset.address;
+
+                                if (lat && lng) {
+                                    selectedLocation = { lat, lng };
+
+                                    if (selectedMarker) {
+                                        selectedMarker.setLatLng([lat, lng]);
+                                    } else {
+                                        selectedMarker = L.circleMarker([lat, lng], {
+                                            radius: 15,
+                                            fillColor: '#000',
+                                            color: '#fff',
+                                            weight: 3,
+                                            fillOpacity: 1
+                                        }).addTo(map);
+                                    }
+
+                                    map.setView([lat, lng], 15);
+                                    addressInput.value = address;
+                                    document.getElementById('selectedLocationDisplay').style.display = 'block';
+                                    document.getElementById('selectedLocationText').textContent = address;
+                                }
+
+                                autocompleteResults.style.display = 'none';
+                            });
+                        });
+                    } catch (error) {
+                        console.error('Autocomplete error:', error);
+                    }
+                }, 500);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.autocomplete-container')) {
+                    autocompleteResults.style.display = 'none';
+                }
+            });
         }
 
         // Click on map to select location
