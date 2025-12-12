@@ -316,6 +316,60 @@
                 <textarea id="hintInput" placeholder="Look for the red door..."></textarea>
             </div>
 
+            <details style="margin-bottom: 16px;">
+                <summary style="cursor: pointer; font-weight: 600; margin-bottom: 12px;">➕ Add Rider Profile (Optional but Hilarious!)</summary>
+
+                <div class="input-group">
+                    <label>Rider Name</label>
+                    <input type="text" id="riderName" placeholder="Karen McDemands">
+                </div>
+
+                <div class="input-group">
+                    <label>Avatar URL (image link)</label>
+                    <input type="text" id="riderAvatar" placeholder="https://i.imgur.com/example.jpg">
+                    <p class="info-text">Upload to imgur.com or use any image URL</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="input-group">
+                        <label>Rating (1-5)</label>
+                        <input type="number" id="riderRating" min="1" max="5" step="0.1" placeholder="4.2">
+                    </div>
+                    <div class="input-group">
+                        <label>Ride Count</label>
+                        <input type="number" id="riderRideCount" placeholder="69">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Interests</label>
+                    <input type="text" id="riderInterests" placeholder="Arguing with managers, essential oils, MLM schemes">
+                </div>
+
+                <div class="input-group">
+                    <label>Favorite Music</label>
+                    <input type="text" id="riderMusic" placeholder="Nickelback, on repeat">
+                </div>
+
+                <div class="input-group">
+                    <label>Fun Fact</label>
+                    <input type="text" id="riderFunFact" placeholder="Once got kicked out of a Build-A-Bear for yelling at kids">
+                </div>
+
+                <div class="input-group">
+                    <label>Driver Note (Yellow banner)</label>
+                    <textarea id="riderNote" placeholder="⚠️ May ask to speak to your manager. Bring air freshener."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>GIF URL (tenor, giphy, imgur)</label>
+                    <input type="text" id="riderGif" placeholder="https://media.giphy.com/media/example.gif">
+                    <p class="info-text">Right-click a GIF → "Copy image address"</p>
+                </div>
+
+                <button class="btn btn-secondary" onclick="clearRiderFields()" style="margin-top: 8px;">Clear Rider Fields</button>
+            </details>
+
             <button class="btn" onclick="addToQueue()">➕ Add to Queue</button>
             <button class="btn btn-secondary" onclick="useCurrentLocation()">📱 Use My Location</button>
             <button class="btn" onclick="sendDestinationNow()" style="background: #28a745; margin-top: 8px;">⚡ Send Now (Skip Queue)</button>
@@ -516,6 +570,35 @@
             }
         }
 
+        function collectRiderData() {
+            const name = document.getElementById('riderName').value.trim();
+            if (!name) return null; // No rider data if no name
+
+            return {
+                name: name,
+                avatar: document.getElementById('riderAvatar').value.trim() || null,
+                rating: parseFloat(document.getElementById('riderRating').value) || 5.0,
+                rideCount: parseInt(document.getElementById('riderRideCount').value) || 0,
+                interests: document.getElementById('riderInterests').value.trim() || null,
+                favoriteMusic: document.getElementById('riderMusic').value.trim() || null,
+                funFact: document.getElementById('riderFunFact').value.trim() || null,
+                note: document.getElementById('riderNote').value.trim() || null,
+                gif: document.getElementById('riderGif').value.trim() || null
+            };
+        }
+
+        window.clearRiderFields = function() {
+            document.getElementById('riderName').value = '';
+            document.getElementById('riderAvatar').value = '';
+            document.getElementById('riderRating').value = '';
+            document.getElementById('riderRideCount').value = '';
+            document.getElementById('riderInterests').value = '';
+            document.getElementById('riderMusic').value = '';
+            document.getElementById('riderFunFact').value = '';
+            document.getElementById('riderNote').value = '';
+            document.getElementById('riderGif').value = '';
+        };
+
         function saveQueue() {
             localStorage.setItem('destinationQueue', JSON.stringify(destinationQueue));
             renderQueue();
@@ -583,12 +666,16 @@
                 }
             }
 
+            // Collect rider data
+            const riderData = collectRiderData();
+
             // Add to queue
             destinationQueue.push({
                 lat: location.lat,
                 lng: location.lng,
                 address: address,
-                hint: hint || null
+                hint: hint || null,
+                rider: riderData
             });
 
             saveQueue();
@@ -597,6 +684,7 @@
             document.getElementById('addressInput').value = '';
             document.getElementById('hintInput').value = '';
             selectedLocation = null;
+            clearRiderFields();
 
             alert(`✅ Added to queue! (${destinationQueue.length} total)`);
         };
@@ -615,7 +703,8 @@
                         lat: nextDest.lat,
                         lng: nextDest.lng,
                         address: nextDest.address,
-                        hint: nextDest.hint
+                        hint: nextDest.hint,
+                        rider: nextDest.rider || null
                     },
                     updatedAt: new Date().toISOString()
                 });
@@ -686,6 +775,9 @@
                 }
             }
 
+            // Collect rider data
+            const riderData = collectRiderData();
+
             // Send to Firebase
             try {
                 await updateDoc(doc(db, 'game', 'current'), {
@@ -693,7 +785,8 @@
                         lat: location.lat,
                         lng: location.lng,
                         address: address,
-                        hint: hint || null
+                        hint: hint || null,
+                        rider: riderData
                     },
                     updatedAt: new Date().toISOString()
                 });
@@ -704,6 +797,7 @@
                 document.getElementById('addressInput').value = '';
                 document.getElementById('hintInput').value = '';
                 selectedLocation = null;
+                clearRiderFields();
 
             } catch (error) {
                 console.error('Error sending destination:', error);

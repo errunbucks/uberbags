@@ -74,6 +74,84 @@
             color: #000;
         }
 
+        .rider-profile {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .rider-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .rider-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            margin-right: 12px;
+            object-fit: cover;
+        }
+
+        .rider-info {
+            flex: 1;
+        }
+
+        .rider-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .rider-rating {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .rating-stars {
+            color: #000;
+            margin-right: 4px;
+        }
+
+        .rider-details {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .rider-details-row {
+            margin-bottom: 6px;
+        }
+
+        .rider-details-row strong {
+            color: #000;
+            font-weight: 600;
+        }
+
+        .rider-note {
+            background: #fffbea;
+            border-left: 3px solid #fbbf24;
+            padding: 8px 12px;
+            margin-top: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #92400e;
+        }
+
+        .rider-gif {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
         .eta-info {
             display: flex;
             justify-content: space-between;
@@ -178,7 +256,24 @@
     </div>
 
     <div id="destinationCard" class="destination-card hidden">
-        <div class="destination-header">NEXT STOP</div>
+        <div class="destination-header">PICKUP REQUEST</div>
+
+        <div id="riderProfile" class="rider-profile" style="display: none;">
+            <div class="rider-header">
+                <img id="riderAvatar" class="rider-avatar" src="" alt="">
+                <div class="rider-info">
+                    <div class="rider-name" id="riderName"></div>
+                    <div class="rider-rating">
+                        <span class="rating-stars" id="riderStars"></span>
+                        <span id="riderRating"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="rider-details" id="riderDetails"></div>
+            <div id="riderNote" class="rider-note" style="display: none;"></div>
+            <img id="riderGif" class="rider-gif" style="display: none;" src="" alt="">
+        </div>
+
         <div class="destination-address" id="destinationAddress">Loading...</div>
         <div class="destination-hint" id="destinationHint" style="display: none;">
             <strong>Hint:</strong>
@@ -287,6 +382,60 @@
             document.getElementById('destinationCard').classList.remove('hidden');
 
             document.getElementById('destinationAddress').textContent = currentDestination.address;
+
+            // Update rider profile if exists
+            if (currentDestination.rider) {
+                const rider = currentDestination.rider;
+                document.getElementById('riderProfile').style.display = 'block';
+
+                // Name and avatar
+                document.getElementById('riderName').textContent = rider.name || 'Mystery Rider';
+
+                if (rider.avatar) {
+                    document.getElementById('riderAvatar').src = rider.avatar;
+                    document.getElementById('riderAvatar').style.display = 'block';
+                } else {
+                    document.getElementById('riderAvatar').src = '';
+                    document.getElementById('riderAvatar').style.display = 'none';
+                }
+
+                // Rating
+                const rating = rider.rating || 5.0;
+                const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+                document.getElementById('riderStars').textContent = stars;
+                document.getElementById('riderRating').textContent = `${rating.toFixed(1)} • ${rider.rideCount || 0} rides`;
+
+                // Details
+                let detailsHTML = '';
+                if (rider.interests) {
+                    detailsHTML += `<div class="rider-details-row"><strong>Interests:</strong> ${rider.interests}</div>`;
+                }
+                if (rider.favoriteMusic) {
+                    detailsHTML += `<div class="rider-details-row"><strong>Music:</strong> ${rider.favoriteMusic}</div>`;
+                }
+                if (rider.funFact) {
+                    detailsHTML += `<div class="rider-details-row"><strong>Fun Fact:</strong> ${rider.funFact}</div>`;
+                }
+                document.getElementById('riderDetails').innerHTML = detailsHTML;
+
+                // Driver note (funny instruction)
+                if (rider.note) {
+                    document.getElementById('riderNote').textContent = rider.note;
+                    document.getElementById('riderNote').style.display = 'block';
+                } else {
+                    document.getElementById('riderNote').style.display = 'none';
+                }
+
+                // GIF
+                if (rider.gif) {
+                    document.getElementById('riderGif').src = rider.gif;
+                    document.getElementById('riderGif').style.display = 'block';
+                } else {
+                    document.getElementById('riderGif').style.display = 'none';
+                }
+            } else {
+                document.getElementById('riderProfile').style.display = 'none';
+            }
 
             if (currentDestination.hint) {
                 document.getElementById('destinationHint').style.display = 'block';
