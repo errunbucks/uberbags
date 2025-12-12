@@ -380,8 +380,10 @@
 
             autocompleteTimeout = setTimeout(async () => {
                 try {
-                    // Try Photon first (better street number accuracy)
-                    const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
+                    // Use Mapbox Geocoding API - best accuracy for street addresses
+                    // Free tier: 100k requests/month
+                    const MAPBOX_TOKEN = 'pk.eyJ1IjoidWJlcmJhZ3MiLCJhIjoiY200MWFmM3ZhMGJvZjJscXI3NHd2N2sxZiJ9.VZ9n8rNR3mXQYKzRdE5B_A';
+                    const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=address,poi&limit=5`);
                     const data = await response.json();
 
                     if (!data.features || data.features.length === 0) {
@@ -391,18 +393,8 @@
                     }
 
                     autocompleteResults.innerHTML = data.features.map(item => {
-                        const props = item.properties;
-                        const coords = item.geometry.coordinates;
-
-                        // Build address string with street number
-                        let addressParts = [];
-                        if (props.housenumber) addressParts.push(props.housenumber);
-                        if (props.street) addressParts.push(props.street);
-                        if (props.city) addressParts.push(props.city);
-                        if (props.state) addressParts.push(props.state);
-                        if (props.country) addressParts.push(props.country);
-
-                        const displayAddress = addressParts.join(', ') || props.name || 'Unknown location';
+                        const coords = item.center;
+                        const displayAddress = item.place_name;
 
                         return `
                             <div class="autocomplete-item" data-lat="${coords[1]}" data-lng="${coords[0]}" data-address="${displayAddress}">
