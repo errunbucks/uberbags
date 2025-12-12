@@ -13,7 +13,25 @@ A real-time scavenger hunt app styled like the Uber driver app. Perfect for bach
 
 ## Setup Instructions
 
-### 1. Create a Firebase Project
+### 1. Get a Google Maps API Key (for address autocomplete)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Go to "APIs & Services" → "Credentials"
+4. Click "Create Credentials" → "API Key"
+5. Copy your API key
+6. Click "Edit API key" → "API restrictions"
+7. Select "Restrict key"
+8. Enable these APIs:
+   - Places API
+   - Geocoding API
+9. Save
+10. Open `add-rider.html` in a text editor
+11. Find `YOUR_API_KEY_HERE` (line 8) and replace with your key
+
+**Important:** The free tier includes $200/month credit = ~28,000 autocomplete requests. More than enough for a party!
+
+### 2. Create a Firebase Project
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click "Add project" and follow the steps
