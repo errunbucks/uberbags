@@ -316,13 +316,13 @@
             // Update buttons
             if (editMode.type === 'current') {
                 document.getElementById('primaryBtn').textContent = '💾 Update Current Destination';
-                document.getElementById('primaryBtn').onclick = updateCurrentDestination;
+                document.getElementById('primaryBtn').setAttribute('onclick', 'updateCurrentDestination()');
                 document.getElementById('secondaryBtn').style.display = 'none';
             } else {
                 document.getElementById('primaryBtn').textContent = '💾 Update in Queue';
-                document.getElementById('primaryBtn').onclick = updateQueueItem;
+                document.getElementById('primaryBtn').setAttribute('onclick', 'updateQueueItem()');
                 document.getElementById('secondaryBtn').textContent = '⚡ Send Now Instead';
-                document.getElementById('secondaryBtn').onclick = sendNow;
+                document.getElementById('secondaryBtn').setAttribute('onclick', 'sendNow()');
             }
         }
 
