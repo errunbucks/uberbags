@@ -296,9 +296,7 @@
 
         <div class="section">
             <div class="section-title">Destination Queue</div>
-            <div id="queueList" style="margin-bottom: 16px;">
-                <p class="info-text" id="emptyQueueMsg">No destinations queued. Add some below!</p>
-            </div>
+            <div id="queueList" style="margin-bottom: 16px;"></div>
             <button class="btn btn-secondary" onclick="sendNextInQueue()" id="sendNextBtn" style="display: none;">▶️ Send Next Destination</button>
         </div>
 
@@ -416,12 +414,8 @@
         let currentDestination = null;
         let destinationQueue = [];
 
-        // Load queue from localStorage on startup
-        const savedQueue = localStorage.getItem('destinationQueue');
-        if (savedQueue) {
-            destinationQueue = JSON.parse(savedQueue);
-            renderQueue();
-        }
+        // Single listener for all Firebase updates
+        let isInitialLoad = true;
 
         // Click on map to select location
         map.on('click', async function(e) {
@@ -533,6 +527,18 @@
                         destinationMarker = null;
                     }
                 }
+
+                // Update queue
+                if (data.queue) {
+                    destinationQueue = data.queue;
+                    renderQueue();
+                } else if (isInitialLoad) {
+                    // Initialize empty queue if doesn't exist
+                    destinationQueue = [];
+                    renderQueue();
+                }
+
+                isInitialLoad = false;
             }
         });
 
@@ -599,23 +605,27 @@
             document.getElementById('riderGif').value = '';
         };
 
-        function saveQueue() {
-            localStorage.setItem('destinationQueue', JSON.stringify(destinationQueue));
-            renderQueue();
+        async function saveQueue() {
+            try {
+                await updateDoc(doc(db, 'game', 'current'), {
+                    queue: destinationQueue
+                });
+            } catch (error) {
+                console.error('Error saving queue:', error);
+                alert('Error saving queue to database');
+            }
         }
 
         function renderQueue() {
             const queueList = document.getElementById('queueList');
             const sendNextBtn = document.getElementById('sendNextBtn');
-            const emptyMsg = document.getElementById('emptyQueueMsg');
 
             if (destinationQueue.length === 0) {
-                emptyMsg.style.display = 'block';
+                queueList.innerHTML = '<p class="info-text">No destinations queued. Add some below!</p>';
                 sendNextBtn.style.display = 'none';
                 return;
             }
 
-            emptyMsg.style.display = 'none';
             sendNextBtn.style.display = 'block';
 
             queueList.innerHTML = destinationQueue.map((dest, index) => `
@@ -625,6 +635,7 @@
                         <span class="queue-item-address">${dest.address}</span>
                     </div>
                     ${dest.hint ? `<div class="queue-item-hint">💡 ${dest.hint}</div>` : ''}
+                    ${dest.rider ? `<div class="queue-item-hint">👤 ${dest.rider.name} (${dest.rider.rating || 5.0}⭐)</div>` : ''}
                     <div class="queue-item-actions">
                         ${index > 0 ? `<button class="queue-item-btn move-up" onclick="moveUp(${index})">↑</button>` : ''}
                         ${index < destinationQueue.length - 1 ? `<button class="queue-item-btn move-down" onclick="moveDown(${index})">↓</button>` : ''}

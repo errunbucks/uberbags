@@ -35,6 +35,7 @@ A real-time scavenger hunt app styled like the Uber driver app. Perfect for bach
    - `driverLocation` (map/null) - leave as null
    - `lastUpdate` (string) - leave empty
    - `status` (string) - value: `"active"`
+   - `queue` (array) - leave as empty array `[]`
 
 ### 3. Configure Your App
 
