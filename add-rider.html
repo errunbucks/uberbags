@@ -157,7 +157,7 @@
 <body>
     <div class="header">
         <button class="back-btn" onclick="goBack()">←</button>
-        <h1>Add New Rider</h1>
+        <h1 id="pageTitle">Add New Rider</h1>
     </div>
 
     <div class="map-hint">📍 Tap the map to select pickup location</div>
@@ -232,8 +232,8 @@
             <p class="info-text">Right-click a GIF → "Copy image address"</p>
         </div>
 
-        <button class="btn" onclick="addToQueue()">➕ Add to Queue</button>
-        <button class="btn btn-secondary" onclick="sendNow()">⚡ Send Now (Skip Queue)</button>
+        <button class="btn" id="primaryBtn" onclick="addToQueue()">➕ Add to Queue</button>
+        <button class="btn btn-secondary" id="secondaryBtn" onclick="sendNow()">⚡ Send Now (Skip Queue)</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -265,6 +265,66 @@
 
         let selectedLocation = null;
         let selectedMarker = null;
+        let editMode = null;
+
+        // Check if we're in edit mode
+        const editModeData = localStorage.getItem('editMode');
+        if (editModeData) {
+            editMode = JSON.parse(editModeData);
+            localStorage.removeItem('editMode'); // Clear it
+
+            // Update UI for edit mode
+            document.getElementById('pageTitle').textContent = 'Edit Rider';
+
+            // Populate form with existing data
+            const data = editMode.data;
+            document.getElementById('addressInput').value = data.address || '';
+            document.getElementById('hintInput').value = data.hint || '';
+
+            if (data.rider) {
+                document.getElementById('riderName').value = data.rider.name || '';
+                document.getElementById('riderAvatar').value = data.rider.avatar || '';
+                document.getElementById('riderRating').value = data.rider.rating || '';
+                document.getElementById('riderRideCount').value = data.rider.rideCount || '';
+                document.getElementById('riderInterests').value = data.rider.interests || '';
+                document.getElementById('riderMusic').value = data.rider.favoriteMusic || '';
+                document.getElementById('riderFunFact').value = data.rider.funFact || '';
+                document.getElementById('riderNote').value = data.rider.note || '';
+                document.getElementById('riderGif').value = data.rider.gif || '';
+            }
+
+            // Set location
+            selectedLocation = {
+                lat: data.lat,
+                lng: data.lng
+            };
+
+            // Add marker
+            selectedMarker = L.circleMarker([data.lat, data.lng], {
+                radius: 15,
+                fillColor: '#000',
+                color: '#fff',
+                weight: 3,
+                fillOpacity: 1
+            }).addTo(map);
+
+            map.setView([data.lat, data.lng], 15);
+
+            document.getElementById('selectedLocationDisplay').style.display = 'block';
+            document.getElementById('selectedLocationText').textContent = data.address;
+
+            // Update buttons
+            if (editMode.type === 'current') {
+                document.getElementById('primaryBtn').textContent = '💾 Update Current Destination';
+                document.getElementById('primaryBtn').onclick = updateCurrentDestination;
+                document.getElementById('secondaryBtn').style.display = 'none';
+            } else {
+                document.getElementById('primaryBtn').textContent = '💾 Update in Queue';
+                document.getElementById('primaryBtn').onclick = updateQueueItem;
+                document.getElementById('secondaryBtn').textContent = '⚡ Send Now Instead';
+                document.getElementById('secondaryBtn').onclick = sendNow;
+            }
+        }
 
         // Click on map to select location
         map.on('click', async function(e) {
@@ -426,6 +486,116 @@
             } catch (error) {
                 console.error('Error sending:', error);
                 alert('Error sending destination.');
+            }
+        };
+
+        window.updateQueueItem = async function() {
+            const address = document.getElementById('addressInput').value.trim();
+            const hint = document.getElementById('hintInput').value.trim();
+
+            if (!address) {
+                alert('Please enter an address');
+                return;
+            }
+
+            let location = selectedLocation;
+
+            if (!location) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        alert('Address not found.');
+                        return;
+                    }
+
+                    location = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                } catch (error) {
+                    alert('Error geocoding address.');
+                    return;
+                }
+            }
+
+            const riderData = collectRiderData();
+
+            try {
+                const docRef = doc(db, 'game', 'current');
+                const docSnap = await getDoc(docRef);
+                const queue = docSnap.data()?.queue || [];
+
+                // Update the item
+                queue[editMode.index] = {
+                    lat: location.lat,
+                    lng: location.lng,
+                    address: address,
+                    hint: hint || null,
+                    rider: riderData
+                };
+
+                await updateDoc(docRef, { queue: queue });
+
+                alert('✅ Updated!');
+                window.location.href = 'organizer.html';
+            } catch (error) {
+                console.error('Error updating:', error);
+                alert('Error updating.');
+            }
+        };
+
+        window.updateCurrentDestination = async function() {
+            const address = document.getElementById('addressInput').value.trim();
+            const hint = document.getElementById('hintInput').value.trim();
+
+            if (!address) {
+                alert('Please enter an address');
+                return;
+            }
+
+            let location = selectedLocation;
+
+            if (!location) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        alert('Address not found.');
+                        return;
+                    }
+
+                    location = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                } catch (error) {
+                    alert('Error geocoding address.');
+                    return;
+                }
+            }
+
+            const riderData = collectRiderData();
+
+            try {
+                await updateDoc(doc(db, 'game', 'current'), {
+                    currentDestination: {
+                        lat: location.lat,
+                        lng: location.lng,
+                        address: address,
+                        hint: hint || null,
+                        rider: riderData
+                    },
+                    updatedAt: new Date().toISOString()
+                });
+
+                alert('✅ Updated!');
+                window.location.href = 'organizer.html';
+            } catch (error) {
+                console.error('Error updating:', error);
+                alert('Error updating.');
             }
         };
 

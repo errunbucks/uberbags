@@ -279,8 +279,13 @@
         <div class="section">
             <div class="section-title">Current Status</div>
             <div id="currentDestinationDisplay" class="current-destination" style="display: none;">
-                <div class="current-destination-label">ACTIVE DESTINATION</div>
-                <div class="current-destination-address" id="currentDestText">None</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="current-destination-label">ACTIVE DESTINATION</div>
+                        <div class="current-destination-address" id="currentDestText">None</div>
+                    </div>
+                    <button class="queue-item-btn" onclick="editCurrentDestination()" style="flex: none; width: auto; padding: 8px 16px;">Edit</button>
+                </div>
             </div>
             <div class="status-card">
                 <div class="status-row">
@@ -570,6 +575,7 @@
                     ${dest.hint ? `<div class="queue-item-hint">💡 ${dest.hint}</div>` : ''}
                     ${dest.rider ? `<div class="queue-item-hint">👤 ${dest.rider.name} (${dest.rider.rating || 5.0}⭐)</div>` : ''}
                     <div class="queue-item-actions">
+                        <button class="queue-item-btn" onclick="editQueueItem(${index})">Edit</button>
                         ${index > 0 ? `<button class="queue-item-btn move-up" onclick="moveUp(${index})">↑</button>` : ''}
                         ${index < destinationQueue.length - 1 ? `<button class="queue-item-btn move-down" onclick="moveDown(${index})">↓</button>` : ''}
                         <button class="queue-item-btn delete" onclick="removeFromQueue(${index})">Delete</button>
@@ -807,6 +813,31 @@
 
         window.goToAddRider = function() {
             window.location.href = 'add-rider.html';
+        };
+
+        window.editQueueItem = function(index) {
+            const item = destinationQueue[index];
+            // Store edit data in localStorage
+            localStorage.setItem('editMode', JSON.stringify({
+                type: 'queue',
+                index: index,
+                data: item
+            }));
+            window.location.href = 'add-rider.html';
+        };
+
+        window.editCurrentDestination = function() {
+            // Get current destination from Firebase
+            onSnapshot(doc(db, 'game', 'current'), (docSnap) => {
+                const data = docSnap.data();
+                if (data && data.currentDestination) {
+                    localStorage.setItem('editMode', JSON.stringify({
+                        type: 'current',
+                        data: data.currentDestination
+                    }));
+                    window.location.href = 'add-rider.html';
+                }
+            }, { once: true });
         };
 
         window.toggleMode = function() {
