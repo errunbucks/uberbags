@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Add New Rider - UberBags</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f6f6f6;
+            color: #000;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #000;
+            color: #fff;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        #map {
+            width: 100%;
+            height: 30vh;
+        }
+
+        .form-container {
+            background: #fff;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin: 24px 0 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+
+        .btn:active {
+            background: #333;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #000;
+            margin-top: 8px;
+        }
+
+        .btn-secondary:active {
+            background: #ddd;
+        }
+
+        .map-hint {
+            background: #f0f0f0;
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .selected-location {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .selected-location strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1>Add New Rider</h1>
+    </div>
+
+    <div class="map-hint">📍 Tap the map to select pickup location</div>
+    <div id="map"></div>
+
+    <div class="form-container">
+        <div id="selectedLocationDisplay" class="selected-location" style="display: none;">
+            <strong>Selected Location</strong>
+            <span id="selectedLocationText">None</span>
+        </div>
+
+        <div class="section-title">Destination Details</div>
+
+        <div class="input-group">
+            <label>Address or Location Name *</label>
+            <input type="text" id="addressInput" placeholder="123 Main St, San Francisco" required>
+            <p class="info-text">Or click on the map above</p>
+        </div>
+
+        <div class="input-group">
+            <label>Hint (Optional)</label>
+            <textarea id="hintInput" placeholder="Look for the red door..."></textarea>
+        </div>
+
+        <div class="section-title">Rider Profile (Optional but Hilarious!)</div>
+
+        <div class="input-group">
+            <label>Rider Name</label>
+            <input type="text" id="riderName" placeholder="Karen McDemands">
+        </div>
+
+        <div class="input-group">
+            <label>Avatar URL (image link)</label>
+            <input type="text" id="riderAvatar" placeholder="https://i.imgur.com/example.jpg">
+            <p class="info-text">Upload to imgur.com or use any image URL</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="input-group">
+                <label>Rating (1-5)</label>
+                <input type="number" id="riderRating" min="1" max="5" step="0.1" placeholder="4.2">
+            </div>
+            <div class="input-group">
+                <label>Ride Count</label>
+                <input type="number" id="riderRideCount" placeholder="69">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Interests</label>
+            <input type="text" id="riderInterests" placeholder="Arguing with managers, essential oils, MLM schemes">
+        </div>
+
+        <div class="input-group">
+            <label>Favorite Music</label>
+            <input type="text" id="riderMusic" placeholder="Nickelback, on repeat">
+        </div>
+
+        <div class="input-group">
+            <label>Fun Fact</label>
+            <input type="text" id="riderFunFact" placeholder="Once got kicked out of a Build-A-Bear for yelling at kids">
+        </div>
+
+        <div class="input-group">
+            <label>Driver Note (Yellow warning banner)</label>
+            <textarea id="riderNote" placeholder="⚠️ May ask to speak to your manager. Bring air freshener."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>GIF URL (tenor, giphy, imgur)</label>
+            <input type="text" id="riderGif" placeholder="https://media.giphy.com/media/example.gif">
+            <p class="info-text">Right-click a GIF → "Copy image address"</p>
+        </div>
+
+        <button class="btn" onclick="addToQueue()">➕ Add to Queue</button>
+        <button class="btn btn-secondary" onclick="sendNow()">⚡ Send Now (Skip Queue)</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, updateDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBfsM8sgEgactZQyox5TGensmLyYLLgAE",
+            authDomain: "uberbags-bab25.firebaseapp.com",
+            projectId: "uberbags-bab25",
+            storageBucket: "uberbags-bab25.firebasestorage.app",
+            messagingSenderId: "298125051536",
+            appId: "1:298125051536:web:bf43a0bdb119d87923ba15",
+            measurementId: "G-KVJ0DCCJVE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Initialize map
+        const map = L.map('map').setView([37.7749, -122.4194], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap, © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        let selectedLocation = null;
+        let selectedMarker = null;
+
+        // Click on map to select location
+        map.on('click', async function(e) {
+            selectedLocation = {
+                lat: e.latlng.lat,
+                lng: e.latlng.lng
+            };
+
+            // Update marker
+            if (selectedMarker) {
+                selectedMarker.setLatLng(e.latlng);
+            } else {
+                selectedMarker = L.circleMarker(e.latlng, {
+                    radius: 15,
+                    fillColor: '#000',
+                    color: '#fff',
+                    weight: 3,
+                    fillOpacity: 1
+                }).addTo(map);
+            }
+
+            // Reverse geocode to get address
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${e.latlng.lat}&lon=${e.latlng.lng}&format=json`);
+                const data = await response.json();
+                document.getElementById('addressInput').value = data.display_name;
+                document.getElementById('selectedLocationDisplay').style.display = 'block';
+                document.getElementById('selectedLocationText').textContent = data.display_name;
+            } catch (error) {
+                document.getElementById('addressInput').value = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+                document.getElementById('selectedLocationDisplay').style.display = 'block';
+                document.getElementById('selectedLocationText').textContent = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+            }
+        });
+
+        function collectRiderData() {
+            const name = document.getElementById('riderName').value.trim();
+            if (!name) return null;
+
+            return {
+                name: name,
+                avatar: document.getElementById('riderAvatar').value.trim() || null,
+                rating: parseFloat(document.getElementById('riderRating').value) || 5.0,
+                rideCount: parseInt(document.getElementById('riderRideCount').value) || 0,
+                interests: document.getElementById('riderInterests').value.trim() || null,
+                favoriteMusic: document.getElementById('riderMusic').value.trim() || null,
+                funFact: document.getElementById('riderFunFact').value.trim() || null,
+                note: document.getElementById('riderNote').value.trim() || null,
+                gif: document.getElementById('riderGif').value.trim() || null
+            };
+        }
+
+        window.addToQueue = async function() {
+            const address = document.getElementById('addressInput').value.trim();
+            const hint = document.getElementById('hintInput').value.trim();
+
+            if (!address) {
+                alert('Please enter an address or click on the map');
+                return;
+            }
+
+            let location = selectedLocation;
+
+            // If no location selected on map, geocode the address
+            if (!location) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        alert('Address not found. Please try a different address or click on the map.');
+                        return;
+                    }
+
+                    location = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                } catch (error) {
+                    alert('Error geocoding address. Please click on the map to select a location.');
+                    return;
+                }
+            }
+
+            const riderData = collectRiderData();
+
+            try {
+                // Get current queue
+                const docRef = doc(db, 'game', 'current');
+                const docSnap = await getDoc(docRef);
+                const queue = docSnap.data()?.queue || [];
+
+                // Add to queue
+                queue.push({
+                    lat: location.lat,
+                    lng: location.lng,
+                    address: address,
+                    hint: hint || null,
+                    rider: riderData
+                });
+
+                await updateDoc(docRef, { queue: queue });
+
+                alert(`✅ Added to queue! (${queue.length} total)`);
+                window.location.href = 'organizer.html';
+            } catch (error) {
+                console.error('Error adding to queue:', error);
+                alert('Error adding to queue. Check console.');
+            }
+        };
+
+        window.sendNow = async function() {
+            const address = document.getElementById('addressInput').value.trim();
+            const hint = document.getElementById('hintInput').value.trim();
+
+            if (!address) {
+                alert('Please enter an address or click on the map');
+                return;
+            }
+
+            let location = selectedLocation;
+
+            if (!location) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        alert('Address not found.');
+                        return;
+                    }
+
+                    location = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                } catch (error) {
+                    alert('Error geocoding address.');
+                    return;
+                }
+            }
+
+            const riderData = collectRiderData();
+
+            try {
+                await updateDoc(doc(db, 'game', 'current'), {
+                    currentDestination: {
+                        lat: location.lat,
+                        lng: location.lng,
+                        address: address,
+                        hint: hint || null,
+                        rider: riderData
+                    },
+                    updatedAt: new Date().toISOString()
+                });
+
+                alert('✅ Destination sent!');
+                window.location.href = 'organizer.html';
+            } catch (error) {
+                console.error('Error sending:', error);
+                alert('Error sending destination.');
+            }
+        };
+
+        window.goBack = function() {
+            window.location.href = 'organizer.html';
+        };
+    </script>
+</body>
+</html>
