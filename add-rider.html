@@ -380,24 +380,42 @@
 
             autocompleteTimeout = setTimeout(async () => {
                 try {
-                    // Use Mapbox Geocoding API - best accuracy for street addresses
-                    // Free tier: 100k requests/month
-                    const MAPBOX_TOKEN = 'pk.eyJ1IjoidWJlcmJhZ3MiLCJhIjoiY200MWFmM3ZhMGJvZjJscXI3NHd2N2sxZiJ9.VZ9n8rNR3mXQYKzRdE5B_A';
-                    const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=address,poi&limit=5`);
+                    // Use Nominatim with street-level addressdetails
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`);
                     const data = await response.json();
 
-                    if (!data.features || data.features.length === 0) {
+                    if (data.length === 0) {
                         autocompleteResults.innerHTML = '<div class="autocomplete-item" style="color: #999;">No results found</div>';
                         autocompleteResults.style.display = 'block';
                         return;
                     }
 
-                    autocompleteResults.innerHTML = data.features.map(item => {
-                        const coords = item.center;
-                        const displayAddress = item.place_name;
+                    autocompleteResults.innerHTML = data.map(item => {
+                        // Format address with street number if available
+                        let displayAddress;
+                        if (item.address) {
+                            let parts = [];
+                            if (item.address.house_number && item.address.road) {
+                                parts.push(item.address.house_number + ' ' + item.address.road);
+                            } else if (item.address.road) {
+                                parts.push(item.address.road);
+                            }
+                            if (item.address.suburb || item.address.neighbourhood) {
+                                parts.push(item.address.suburb || item.address.neighbourhood);
+                            }
+                            if (item.address.city || item.address.town) {
+                                parts.push(item.address.city || item.address.town);
+                            }
+                            if (item.address.state) parts.push(item.address.state);
+                            if (item.address.country) parts.push(item.address.country);
+
+                            displayAddress = parts.filter(p => p).join(', ') || item.display_name;
+                        } else {
+                            displayAddress = item.display_name;
+                        }
 
                         return `
-                            <div class="autocomplete-item" data-lat="${coords[1]}" data-lng="${coords[0]}" data-address="${displayAddress}">
+                            <div class="autocomplete-item" data-lat="${item.lat}" data-lng="${item.lon}" data-address="${displayAddress}" data-raw="${item.display_name}">
                                 ${displayAddress}
                             </div>
                         `;
