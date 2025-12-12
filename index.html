@@ -167,8 +167,7 @@
 </head>
 <body>
     <div class="status-bar">
-        <div style="font-size: 14px;">=� UberBags</div>
-        <button class="mode-toggle" onclick="toggleMode()">Switch to Organizer</button>
+        <div style="font-size: 14px;">🚗 UberBags</div>
     </div>
 
     <div id="map"></div>
@@ -248,7 +247,10 @@
                         driverMarker.setLatLng([driverLocation.lat, driverLocation.lng]);
                     }
 
-                    map.setView([driverLocation.lat, driverLocation.lng], 15);
+                    // Only auto-center if not navigating (user can manually pan the map)
+                    if (!isNavigating && !currentDestination) {
+                        map.setView([driverLocation.lat, driverLocation.lng], 15);
+                    }
 
                     // Update distance and route if we have a destination
                     if (currentDestination) {
@@ -308,8 +310,8 @@
 
             updateDistance();
 
-            // Fit map to show both markers
-            if (driverLocation) {
+            // Only auto-fit map once when destination is first received
+            if (driverLocation && !isNavigating) {
                 const bounds = L.latLngBounds(
                     [driverLocation.lat, driverLocation.lng],
                     [currentDestination.lat, currentDestination.lng]
@@ -385,8 +387,7 @@
                     const durationMinutes = Math.round(route.duration / 60);
                     document.getElementById('eta').textContent = `ETA: ${durationMinutes} min`;
 
-                    // Fit map to show route
-                    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                    // Don't auto-zoom while navigating - let user pan/zoom manually
                 }
             } catch (error) {
                 console.error('Error fetching route:', error);
@@ -398,6 +399,13 @@
                 isNavigating = !isNavigating;
 
                 if (isNavigating) {
+                    // Fit to route only when first starting navigation
+                    const bounds = L.latLngBounds(
+                        [driverLocation.lat, driverLocation.lng],
+                        [currentDestination.lat, currentDestination.lng]
+                    );
+                    map.fitBounds(bounds, { padding: [100, 100] });
+
                     updateRoute();
                     document.querySelector('.navigate-btn').textContent = 'Stop Navigation';
                     document.querySelector('.navigate-btn').style.background = '#dc3545';
