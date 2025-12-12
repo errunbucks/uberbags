@@ -28,21 +28,54 @@
 
         .destination-card {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 32px);
-            max-width: 400px;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: #fff;
             color: #000;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.3);
             z-index: 1000;
+            transition: transform 0.3s ease-out;
+            max-height: 85vh;
+            overflow-y: auto;
         }
 
         .destination-card.hidden {
             display: none;
+        }
+
+        .destination-card.minimized {
+            transform: translateY(calc(100% - 140px));
+        }
+
+        .card-handle {
+            width: 40px;
+            height: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            margin: 12px auto 8px;
+            cursor: pointer;
+        }
+
+        .card-content {
+            padding: 0 20px 20px;
+        }
+
+        .card-summary {
+            padding: 0 20px 12px;
+            cursor: pointer;
+        }
+
+        .card-summary-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-summary-address {
+            font-size: 14px;
+            color: #666;
         }
 
         .destination-header {
@@ -255,35 +288,43 @@
         <p>Waiting for your first destination...</p>
     </div>
 
-    <div id="destinationCard" class="destination-card hidden">
-        <div class="destination-header">PICKUP REQUEST</div>
+    <div id="destinationCard" class="destination-card hidden minimized">
+        <div class="card-handle" onclick="toggleCard()"></div>
 
-        <div id="riderProfile" class="rider-profile" style="display: none;">
-            <div class="rider-header">
-                <img id="riderAvatar" class="rider-avatar" src="" alt="">
-                <div class="rider-info">
-                    <div class="rider-name" id="riderName"></div>
-                    <div class="rider-rating">
-                        <span class="rating-stars" id="riderStars"></span>
-                        <span id="riderRating"></span>
+        <div class="card-summary" onclick="toggleCard()">
+            <div class="card-summary-name" id="summaryName">Pickup Request</div>
+            <div class="card-summary-address" id="summaryAddress">Loading...</div>
+        </div>
+
+        <div class="card-content">
+            <div id="riderProfile" class="rider-profile" style="display: none;">
+                <div class="rider-header">
+                    <img id="riderAvatar" class="rider-avatar" src="" alt="">
+                    <div class="rider-info">
+                        <div class="rider-name" id="riderName"></div>
+                        <div class="rider-rating">
+                            <span class="rating-stars" id="riderStars"></span>
+                            <span id="riderRating"></span>
+                        </div>
                     </div>
                 </div>
+                <div class="rider-details" id="riderDetails"></div>
+                <div id="riderNote" class="rider-note" style="display: none;"></div>
+                <img id="riderGif" class="rider-gif" style="display: none;" src="" alt="">
             </div>
-            <div class="rider-details" id="riderDetails"></div>
-            <div id="riderNote" class="rider-note" style="display: none;"></div>
-            <img id="riderGif" class="rider-gif" style="display: none;" src="" alt="">
-        </div>
 
-        <div class="destination-address" id="destinationAddress">Loading...</div>
-        <div class="destination-hint" id="destinationHint" style="display: none;">
-            <strong>Hint:</strong>
-            <span id="hintText"></span>
+            <div class="destination-header">DESTINATION</div>
+            <div class="destination-address" id="destinationAddress">Loading...</div>
+            <div class="destination-hint" id="destinationHint" style="display: none;">
+                <strong>Hint:</strong>
+                <span id="hintText"></span>
+            </div>
+            <div class="eta-info">
+                <span id="distance">Calculating...</span>
+                <span id="eta">ETA: --</span>
+            </div>
+            <button class="navigate-btn" onclick="openNavigation()">Start Navigation</button>
         </div>
-        <div class="eta-info">
-            <span id="distance">Calculating...</span>
-            <span id="eta">ETA: --</span>
-        </div>
-        <button class="navigate-btn" onclick="openNavigation()">Start Navigation</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -382,11 +423,15 @@
             document.getElementById('destinationCard').classList.remove('hidden');
 
             document.getElementById('destinationAddress').textContent = currentDestination.address;
+            document.getElementById('summaryAddress').textContent = currentDestination.address;
 
             // Update rider profile if exists
             if (currentDestination.rider) {
                 const rider = currentDestination.rider;
                 document.getElementById('riderProfile').style.display = 'block';
+
+                // Update summary
+                document.getElementById('summaryName').textContent = rider.name || 'Mystery Rider';
 
                 // Name and avatar
                 document.getElementById('riderName').textContent = rider.name || 'Mystery Rider';
@@ -435,6 +480,7 @@
                 }
             } else {
                 document.getElementById('riderProfile').style.display = 'none';
+                document.getElementById('summaryName').textContent = 'Pickup Request';
             }
 
             if (currentDestination.hint) {
@@ -576,6 +622,37 @@
                 }
             }
         };
+
+        window.toggleCard = function() {
+            const card = document.getElementById('destinationCard');
+            card.classList.toggle('minimized');
+        };
+
+        // Add touch swipe support
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        document.getElementById('destinationCard').addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.getElementById('destinationCard').addEventListener('touchmove', (e) => {
+            touchEndY = e.touches[0].clientY;
+        });
+
+        document.getElementById('destinationCard').addEventListener('touchend', () => {
+            const card = document.getElementById('destinationCard');
+            const swipeDistance = touchStartY - touchEndY;
+
+            // Swipe up (expand)
+            if (swipeDistance > 50) {
+                card.classList.remove('minimized');
+            }
+            // Swipe down (minimize)
+            else if (swipeDistance < -50) {
+                card.classList.add('minimized');
+            }
+        });
 
         window.toggleMode = function() {
             window.location.href = 'organizer.html';
