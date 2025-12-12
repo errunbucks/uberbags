@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UberBags - Organizer Control</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f6f6f6;
+            color: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .header {
+            background: #000;
+            color: #fff;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .mode-toggle {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #map {
+            width: 100%;
+            height: 40vh;
+        }
+
+        .control-panel {
+            height: calc(60vh - 56px);
+            overflow-y: auto;
+            padding: 16px;
+            background: #fff;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .btn:active {
+            background: #333;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #000;
+        }
+
+        .btn-secondary:active {
+            background: #ddd;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:active {
+            background: #c82333;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .status-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-label {
+            color: #666;
+        }
+
+        .status-value {
+            font-weight: 600;
+        }
+
+        .quick-destinations {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .quick-dest-btn {
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .quick-dest-btn:active {
+            background: #ddd;
+        }
+
+        .current-destination {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .current-destination-label {
+            font-size: 12px;
+            color: #2e7d32;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .current-destination-address {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Organizer Control Panel</h1>
+        <button class="mode-toggle" onclick="toggleMode()">Driver View</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="control-panel">
+        <div class="section">
+            <div class="section-title">Current Status</div>
+            <div id="currentDestinationDisplay" class="current-destination" style="display: none;">
+                <div class="current-destination-label">ACTIVE DESTINATION</div>
+                <div class="current-destination-address" id="currentDestText">None</div>
+            </div>
+            <div class="status-card">
+                <div class="status-row">
+                    <span class="status-label">Driver Location</span>
+                    <span class="status-value" id="driverStatus">Waiting for GPS...</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Last Update</span>
+                    <span class="status-value" id="lastUpdate">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Send New Destination</div>
+
+            <div class="input-group">
+                <label>Address or Location Name</label>
+                <input type="text" id="addressInput" placeholder="123 Main St, San Francisco">
+                <p class="info-text">💡 Tip: Click on the map to select a location</p>
+            </div>
+
+            <div class="input-group">
+                <label>Hint (Optional)</label>
+                <textarea id="hintInput" placeholder="Look for the red door..."></textarea>
+            </div>
+
+            <button class="btn" onclick="sendDestination()">📍 Send Destination</button>
+            <button class="btn btn-secondary" onclick="useCurrentLocation()">📱 Use My Location</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Quick Actions</div>
+            <button class="btn btn-danger" onclick="clearDestination()">🚫 Clear Current Destination</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBfsM8sgEgactZQyox5TGensmLyYLLgAE",
+            authDomain: "uberbags-bab25.firebaseapp.com",
+            projectId: "uberbags-bab25",
+            storageBucket: "uberbags-bab25.firebasestorage.app",
+            messagingSenderId: "298125051536",
+            appId: "1:298125051536:web:bf43a0bdb119d87923ba15",
+            measurementId: "G-KVJ0DCCJVE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Initialize map
+        const map = L.map('map').setView([37.7749, -122.4194], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap, © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        let driverMarker = null;
+        let destinationMarker = null;
+        let selectedLocation = null;
+        let driverLocation = null;
+
+        // Click on map to select location
+        map.on('click', async function(e) {
+            selectedLocation = {
+                lat: e.latlng.lat,
+                lng: e.latlng.lng
+            };
+
+            // Update marker
+            if (destinationMarker) {
+                destinationMarker.setLatLng(e.latlng);
+            } else {
+                destinationMarker = L.circleMarker(e.latlng, {
+                    radius: 15,
+                    fillColor: '#000',
+                    color: '#fff',
+                    weight: 3,
+                    fillOpacity: 1
+                }).addTo(map);
+            }
+
+            // Reverse geocode to get address
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${e.latlng.lat}&lon=${e.latlng.lng}&format=json`);
+                const data = await response.json();
+                document.getElementById('addressInput').value = data.display_name;
+            } catch (error) {
+                document.getElementById('addressInput').value = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+            }
+        });
+
+        // Listen for game state updates
+        onSnapshot(doc(db, 'game', 'current'), (doc) => {
+            const data = doc.data();
+
+            if (data) {
+                // Update driver location
+                if (data.driverLocation) {
+                    driverLocation = data.driverLocation;
+
+                    if (!driverMarker) {
+                        driverMarker = L.circleMarker([data.driverLocation.lat, data.driverLocation.lng], {
+                            radius: 10,
+                            fillColor: '#276EF1',
+                            color: '#fff',
+                            weight: 3,
+                            fillOpacity: 1
+                        }).addTo(map);
+                    } else {
+                        driverMarker.setLatLng([data.driverLocation.lat, data.driverLocation.lng]);
+                    }
+
+                    document.getElementById('driverStatus').textContent =
+                        `${data.driverLocation.lat.toFixed(5)}, ${data.driverLocation.lng.toFixed(5)}`;
+                }
+
+                // Update last update time
+                if (data.lastUpdate) {
+                    const updateTime = new Date(data.lastUpdate);
+                    const now = new Date();
+                    const diffSeconds = Math.floor((now - updateTime) / 1000);
+
+                    if (diffSeconds < 60) {
+                        document.getElementById('lastUpdate').textContent = `${diffSeconds}s ago`;
+                    } else {
+                        document.getElementById('lastUpdate').textContent = `${Math.floor(diffSeconds / 60)}m ago`;
+                    }
+                }
+
+                // Update current destination display
+                if (data.currentDestination) {
+                    document.getElementById('currentDestinationDisplay').style.display = 'block';
+                    document.getElementById('currentDestText').textContent = data.currentDestination.address;
+                } else {
+                    document.getElementById('currentDestinationDisplay').style.display = 'none';
+                }
+            }
+        });
+
+        window.sendDestination = async function() {
+            const address = document.getElementById('addressInput').value.trim();
+            const hint = document.getElementById('hintInput').value.trim();
+
+            if (!address) {
+                alert('Please enter an address or click on the map');
+                return;
+            }
+
+            let location = selectedLocation;
+
+            // If no location selected on map, geocode the address
+            if (!location) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        alert('Address not found. Please try a different address or click on the map.');
+                        return;
+                    }
+
+                    location = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                } catch (error) {
+                    alert('Error geocoding address. Please click on the map to select a location.');
+                    return;
+                }
+            }
+
+            // Send to Firebase
+            try {
+                await updateDoc(doc(db, 'game', 'current'), {
+                    currentDestination: {
+                        lat: location.lat,
+                        lng: location.lng,
+                        address: address,
+                        hint: hint || null
+                    },
+                    updatedAt: new Date().toISOString()
+                });
+
+                alert('✅ Destination sent!');
+
+                // Clear form
+                document.getElementById('addressInput').value = '';
+                document.getElementById('hintInput').value = '';
+                selectedLocation = null;
+
+            } catch (error) {
+                console.error('Error sending destination:', error);
+                alert('Error sending destination. Check console for details.');
+            }
+        };
+
+        window.useCurrentLocation = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        selectedLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+
+                        map.setView([selectedLocation.lat, selectedLocation.lng], 16);
+
+                        if (destinationMarker) {
+                            destinationMarker.setLatLng([selectedLocation.lat, selectedLocation.lng]);
+                        } else {
+                            destinationMarker = L.circleMarker([selectedLocation.lat, selectedLocation.lng], {
+                                radius: 15,
+                                fillColor: '#000',
+                                color: '#fff',
+                                weight: 3,
+                                fillOpacity: 1
+                            }).addTo(map);
+                        }
+
+                        // Reverse geocode
+                        try {
+                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${selectedLocation.lat}&lon=${selectedLocation.lng}&format=json`);
+                            const data = await response.json();
+                            document.getElementById('addressInput').value = data.display_name;
+                        } catch (error) {
+                            document.getElementById('addressInput').value = `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+                        }
+                    },
+                    (error) => {
+                        alert('Could not get your location. Please enable location services.');
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
+        };
+
+        window.clearDestination = async function() {
+            if (!confirm('Clear the current destination?')) return;
+
+            try {
+                await updateDoc(doc(db, 'game', 'current'), {
+                    currentDestination: null,
+                    updatedAt: new Date().toISOString()
+                });
+                alert('✅ Destination cleared!');
+            } catch (error) {
+                console.error('Error clearing destination:', error);
+                alert('Error clearing destination.');
+            }
+        };
+
+        window.toggleMode = function() {
+            window.location.href = 'index.html';
+        };
+    </script>
+</body>
+</html>

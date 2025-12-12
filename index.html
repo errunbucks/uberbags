@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UberBags - Driver</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .destination-card {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 400px;
+            background: #fff;
+            color: #000;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .destination-card.hidden {
+            display: none;
+        }
+
+        .destination-header {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .destination-address {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .destination-hint {
+            background: #f6f6f6;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .destination-hint strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #000;
+        }
+
+        .eta-info {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+
+        .eta-info span {
+            color: #666;
+        }
+
+        .navigate-btn {
+            width: 100%;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        .navigate-btn:active {
+            background: #333;
+        }
+
+        .status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            z-index: 999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mode-toggle {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .waiting-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 32px;
+            border-radius: 16px;
+        }
+
+        .waiting-message h2 {
+            margin-bottom: 8px;
+        }
+
+        .waiting-message p {
+            color: #999;
+        }
+
+        /* Leaflet marker customization */
+        .destination-marker {
+            background: #000;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+        }
+
+        .driver-marker {
+            background: #276EF1;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div style="font-size: 14px;">=� UberBags</div>
+        <button class="mode-toggle" onclick="toggleMode()">Switch to Organizer</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="waitingMessage" class="waiting-message">
+        <h2>Ready to Roll!</h2>
+        <p>Waiting for your first destination...</p>
+    </div>
+
+    <div id="destinationCard" class="destination-card hidden">
+        <div class="destination-header">NEXT STOP</div>
+        <div class="destination-address" id="destinationAddress">Loading...</div>
+        <div class="destination-hint" id="destinationHint" style="display: none;">
+            <strong>Hint:</strong>
+            <span id="hintText"></span>
+        </div>
+        <div class="eta-info">
+            <span id="distance">Calculating...</span>
+            <span id="eta">ETA: --</span>
+        </div>
+        <button class="navigate-btn" onclick="openNavigation()">Start Navigation</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBfsM8sgEgactZQyox5TGensmLyYLLgAE",
+            authDomain: "uberbags-bab25.firebaseapp.com",
+            projectId: "uberbags-bab25",
+            storageBucket: "uberbags-bab25.firebasestorage.app",
+            messagingSenderId: "298125051536",
+            appId: "1:298125051536:web:bf43a0bdb119d87923ba15",
+            measurementId: "G-KVJ0DCCJVE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Initialize map
+        const map = L.map('map').setView([37.7749, -122.4194], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap, © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        let driverMarker = null;
+        let destinationMarker = null;
+        let currentDestination = null;
+        let driverLocation = null;
+        let routeLine = null;
+        let isNavigating = false;
+
+        // Watch driver's location
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    driverLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    // Update driver marker
+                    if (!driverMarker) {
+                        driverMarker = L.circleMarker([driverLocation.lat, driverLocation.lng], {
+                            radius: 10,
+                            fillColor: '#276EF1',
+                            color: '#fff',
+                            weight: 3,
+                            fillOpacity: 1
+                        }).addTo(map);
+                    } else {
+                        driverMarker.setLatLng([driverLocation.lat, driverLocation.lng]);
+                    }
+
+                    map.setView([driverLocation.lat, driverLocation.lng], 15);
+
+                    // Update distance and route if we have a destination
+                    if (currentDestination) {
+                        updateDistance();
+                        if (isNavigating) {
+                            updateRoute();
+                        }
+                    }
+
+                    // Update Firestore with driver location
+                    updateDoc(doc(db, 'game', 'current'), {
+                        driverLocation: driverLocation,
+                        lastUpdate: new Date().toISOString()
+                    });
+                },
+                (error) => console.error('Geolocation error:', error),
+                { enableHighAccuracy: true, maximumAge: 10000 }
+            );
+        }
+
+        // Listen for destination updates
+        onSnapshot(doc(db, 'game', 'current'), (doc) => {
+            const data = doc.data();
+            if (data && data.currentDestination) {
+                currentDestination = data.currentDestination;
+                updateDestinationUI();
+            } else {
+                showWaitingMessage();
+            }
+        });
+
+        function updateDestinationUI() {
+            document.getElementById('waitingMessage').style.display = 'none';
+            document.getElementById('destinationCard').classList.remove('hidden');
+
+            document.getElementById('destinationAddress').textContent = currentDestination.address;
+
+            if (currentDestination.hint) {
+                document.getElementById('destinationHint').style.display = 'block';
+                document.getElementById('hintText').textContent = currentDestination.hint;
+            } else {
+                document.getElementById('destinationHint').style.display = 'none';
+            }
+
+            // Update destination marker
+            if (!destinationMarker) {
+                destinationMarker = L.circleMarker([currentDestination.lat, currentDestination.lng], {
+                    radius: 15,
+                    fillColor: '#000',
+                    color: '#fff',
+                    weight: 3,
+                    fillOpacity: 1
+                }).addTo(map);
+            } else {
+                destinationMarker.setLatLng([currentDestination.lat, currentDestination.lng]);
+            }
+
+            updateDistance();
+
+            // Fit map to show both markers
+            if (driverLocation) {
+                const bounds = L.latLngBounds(
+                    [driverLocation.lat, driverLocation.lng],
+                    [currentDestination.lat, currentDestination.lng]
+                );
+                map.fitBounds(bounds, { padding: [100, 100] });
+            }
+        }
+
+        function updateDistance() {
+            if (!driverLocation || !currentDestination) return;
+
+            const distance = calculateDistance(
+                driverLocation.lat,
+                driverLocation.lng,
+                currentDestination.lat,
+                currentDestination.lng
+            );
+
+            const distanceText = distance < 1
+                ? `${Math.round(distance * 1000)} m away`
+                : `${distance.toFixed(1)} km away`;
+
+            document.getElementById('distance').textContent = distanceText;
+
+            // Rough ETA (assuming 30 km/h average speed in city)
+            const eta = Math.round((distance / 30) * 60);
+            document.getElementById('eta').textContent = `ETA: ${eta} min`;
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function showWaitingMessage() {
+            document.getElementById('waitingMessage').style.display = 'block';
+            document.getElementById('destinationCard').classList.add('hidden');
+        }
+
+        async function updateRoute() {
+            if (!driverLocation || !currentDestination) return;
+
+            try {
+                // Use OSRM (Open Source Routing Machine) for routing
+                const url = `https://router.project-osrm.org/route/v1/driving/${driverLocation.lng},${driverLocation.lat};${currentDestination.lng},${currentDestination.lat}?overview=full&geometries=geojson`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+
+                    // Remove old route line
+                    if (routeLine) {
+                        map.removeLayer(routeLine);
+                    }
+
+                    // Draw new route
+                    routeLine = L.polyline(coordinates, {
+                        color: '#000',
+                        weight: 4,
+                        opacity: 0.7
+                    }).addTo(map);
+
+                    // Update ETA with actual route time
+                    const durationMinutes = Math.round(route.duration / 60);
+                    document.getElementById('eta').textContent = `ETA: ${durationMinutes} min`;
+
+                    // Fit map to show route
+                    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                }
+            } catch (error) {
+                console.error('Error fetching route:', error);
+            }
+        }
+
+        window.openNavigation = function() {
+            if (currentDestination && driverLocation) {
+                isNavigating = !isNavigating;
+
+                if (isNavigating) {
+                    updateRoute();
+                    document.querySelector('.navigate-btn').textContent = 'Stop Navigation';
+                    document.querySelector('.navigate-btn').style.background = '#dc3545';
+                } else {
+                    // Stop navigation
+                    if (routeLine) {
+                        map.removeLayer(routeLine);
+                        routeLine = null;
+                    }
+                    document.querySelector('.navigate-btn').textContent = 'Start Navigation';
+                    document.querySelector('.navigate-btn').style.background = '#000';
+
+                    // Fit map to show both markers
+                    const bounds = L.latLngBounds(
+                        [driverLocation.lat, driverLocation.lng],
+                        [currentDestination.lat, currentDestination.lng]
+                    );
+                    map.fitBounds(bounds, { padding: [100, 100] });
+                }
+            }
+        };
+
+        window.toggleMode = function() {
+            window.location.href = 'organizer.html';
+        };
+    </script>
+</body>
+</html>
