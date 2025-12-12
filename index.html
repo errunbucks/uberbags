@@ -225,8 +225,13 @@
             padding: 16px;
             z-index: 999;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
+        }
+
+        .status-bar-title {
+            font-size: 24px;
+            font-weight: 600;
         }
 
         .mode-toggle {
@@ -279,7 +284,7 @@
 </head>
 <body>
     <div class="status-bar">
-        <div style="font-size: 14px;">❄️ UberBags</div>
+        <div class="status-bar-title">❄️ UberBags</div>
     </div>
 
     <div id="map"></div>
