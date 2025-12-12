@@ -302,7 +302,10 @@
         <div class="section">
             <div class="section-title">Destination Queue</div>
             <div id="queueList" style="margin-bottom: 16px;"></div>
-            <button class="btn btn-secondary" onclick="sendNextInQueue()" id="sendNextBtn" style="display: none;">▶️ Send Next Destination</button>
+            <div id="queueControls" style="display: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn btn-secondary" onclick="sendPreviousInQueue()" id="sendPrevBtn">◀️ Previous</button>
+                <button class="btn btn-secondary" onclick="sendNextInQueue()" id="sendNextBtn">▶️ Next</button>
+            </div>
         </div>
 
         <div class="section">
@@ -320,7 +323,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -556,15 +559,15 @@
 
         function renderQueue() {
             const queueList = document.getElementById('queueList');
-            const sendNextBtn = document.getElementById('sendNextBtn');
+            const queueControls = document.getElementById('queueControls');
 
             if (destinationQueue.length === 0) {
                 queueList.innerHTML = '<p class="info-text">No destinations queued. Add some below!</p>';
-                sendNextBtn.style.display = 'none';
+                queueControls.style.display = 'none';
                 return;
             }
 
-            sendNextBtn.style.display = 'block';
+            queueControls.style.display = 'grid';
 
             queueList.innerHTML = destinationQueue.map((dest, index) => `
                 <div class="queue-item">
@@ -648,7 +651,13 @@
             const nextDest = destinationQueue[0];
 
             try {
-                await updateDoc(doc(db, 'game', 'current'), {
+                // Get current destination to add back to queue
+                const docRef = doc(db, 'game', 'current');
+                const docSnap = await getDoc(docRef);
+                const currentDest = docSnap.data()?.currentDestination;
+
+                // Send next destination
+                await updateDoc(docRef, {
                     currentDestination: {
                         lat: nextDest.lat,
                         lng: nextDest.lng,
@@ -659,11 +668,64 @@
                     updatedAt: new Date().toISOString()
                 });
 
-                // Remove from queue
+                // Remove from front of queue
                 destinationQueue.shift();
-                saveQueue();
 
-                alert('✅ Destination sent!');
+                // Add old current to end of queue if it exists
+                if (currentDest) {
+                    destinationQueue.push(currentDest);
+                }
+
+                await saveQueue();
+
+                alert('✅ Next destination sent!');
+            } catch (error) {
+                console.error('Error sending destination:', error);
+                alert('Error sending destination. Check console for details.');
+            }
+        };
+
+        window.sendPreviousInQueue = async function() {
+            if (destinationQueue.length === 0) {
+                alert('Queue is empty!');
+                return;
+            }
+
+            try {
+                // Get current destination
+                const docRef = doc(db, 'game', 'current');
+                const docSnap = await getDoc(docRef);
+                const currentDest = docSnap.data()?.currentDestination;
+
+                if (!currentDest) {
+                    alert('No current destination to go back from!');
+                    return;
+                }
+
+                // Get last destination from queue
+                const prevDest = destinationQueue[destinationQueue.length - 1];
+
+                // Send previous destination
+                await updateDoc(docRef, {
+                    currentDestination: {
+                        lat: prevDest.lat,
+                        lng: prevDest.lng,
+                        address: prevDest.address,
+                        hint: prevDest.hint,
+                        rider: prevDest.rider || null
+                    },
+                    updatedAt: new Date().toISOString()
+                });
+
+                // Remove from end of queue
+                destinationQueue.pop();
+
+                // Add current to front of queue
+                destinationQueue.unshift(currentDest);
+
+                await saveQueue();
+
+                alert('✅ Previous destination sent!');
             } catch (error) {
                 console.error('Error sending destination:', error);
                 alert('Error sending destination. Check console for details.');
