@@ -621,7 +621,6 @@
                     <span id="distance">Calculating...</span>
                     <span id="eta">ETA: --</span>
                 </div>
-                <button class="navigate-btn" onclick="openNavigation()">Start Navigation</button>
                 <button class="complete-job-btn" onclick="completeJob()">JOB COMPLETE</button>
             </div>
         </div>
@@ -708,6 +707,12 @@
                         document.getElementById('jobPendingView').style.display = 'none';
                         document.getElementById('jobActiveView').style.display = 'block';
                         document.getElementById('countdownOverlay').style.display = 'block';
+
+                        // Restore navigation
+                        if (driverLocation && currentDestination) {
+                            isNavigating = true;
+                            updateRoute();
+                        }
 
                         // Start timer
                         updateTimer();
@@ -945,42 +950,6 @@
             }
         }
 
-        window.openNavigation = function() {
-            if (currentDestination && driverLocation) {
-                isNavigating = !isNavigating;
-
-                const navBtn = document.querySelector('.navigate-btn');
-
-                if (isNavigating) {
-                    // Start navigation - draw route
-                    updateRoute();
-                    if (navBtn) {
-                        navBtn.textContent = 'Stop Navigation';
-                        navBtn.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
-                    }
-
-                    // Fit map to show route
-                    if (driverLocation && currentDestination) {
-                        const bounds = L.latLngBounds(
-                            [driverLocation.lat, driverLocation.lng],
-                            [currentDestination.lat, currentDestination.lng]
-                        );
-                        map.fitBounds(bounds, { padding: [100, 100] });
-                    }
-                } else {
-                    // Stop navigation - remove route
-                    if (routeLine) {
-                        map.removeLayer(routeLine);
-                        routeLine = null;
-                    }
-                    if (navBtn) {
-                        navBtn.textContent = 'Start Navigation';
-                        navBtn.style.background = 'linear-gradient(135deg, #000 0%, #333 100%)';
-                    }
-                }
-            }
-        };
-
         window.toggleCard = function() {
             const card = document.getElementById('destinationCard');
             card.classList.toggle('minimized');
@@ -1043,6 +1012,19 @@
 
             // Minimize the card to show map
             document.getElementById('destinationCard').classList.add('minimized');
+
+            // Auto-start navigation
+            if (driverLocation && currentDestination) {
+                isNavigating = true;
+                updateRoute();
+
+                // Fit map to show route
+                const bounds = L.latLngBounds(
+                    [driverLocation.lat, driverLocation.lng],
+                    [currentDestination.lat, currentDestination.lng]
+                );
+                map.fitBounds(bounds, { padding: [100, 100] });
+            }
 
             // Start timer
             updateTimer();
