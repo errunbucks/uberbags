@@ -192,7 +192,7 @@
 <body>
     <div class="header">
         <button class="back-btn" onclick="goBack()">←</button>
-        <h1 id="pageTitle">Add New Rider</h1>
+        <h1 id="pageTitle">Add New Job</h1>
     </div>
 
     <div class="map-hint">📍 Tap the map to select pickup location</div>
@@ -297,7 +297,7 @@
             localStorage.removeItem('editMode'); // Clear it
 
             // Update UI for edit mode
-            document.getElementById('pageTitle').textContent = 'Edit Rider';
+            document.getElementById('pageTitle').textContent = 'Edit Job';
 
             // Populate form with existing data
             const data = editMode.data;

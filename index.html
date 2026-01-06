@@ -750,6 +750,11 @@
             document.getElementById('waitingMessage').style.display = 'none';
             document.getElementById('destinationCard').classList.remove('hidden');
 
+            // Reset to pending view (in case job was previously active)
+            document.getElementById('jobPendingView').style.display = 'block';
+            document.getElementById('jobActiveView').style.display = 'none';
+            jobActive = false;
+
             // Extract job info from destination
             const jobTitle = currentDestination.jobTitle || currentDestination.rider?.name || 'Mystery Job';
             const jobDescription = currentDestination.jobDescription || currentDestination.hint || 'Complete the task at this location.';
