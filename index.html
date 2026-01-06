@@ -367,34 +367,34 @@
 
         .countdown-overlay {
             position: fixed;
-            top: 50%;
+            top: 80px;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translateX(-50%);
             background: rgba(0,0,0,0.92);
-            padding: 40px;
-            border-radius: 20px;
+            padding: 20px 30px;
+            border-radius: 16px;
             z-index: 2000;
             text-align: center;
-            min-width: 320px;
+            min-width: 280px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
         .countdown-label {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: 600;
             color: #fff;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
 
         .countdown-timer {
-            font-size: 72px;
+            font-size: 48px;
             font-weight: 700;
             color: #dc2626;
             font-variant-numeric: tabular-nums;
             line-height: 1;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             text-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
         }
 
@@ -629,9 +629,8 @@
 
     <!-- Countdown Overlay (shown during active job) -->
     <div id="countdownOverlay" class="countdown-overlay" style="display: none;">
-        <div class="countdown-label">TIME REMAINING:</div>
+        <div class="countdown-label">TIME REMAINING</div>
         <div class="countdown-timer" id="countdownTimer">15:00</div>
-        <div class="job-description-text" id="overlayJobDescription" style="color: #fff; margin-top: 12px;">Loading...</div>
         <div class="progress-bar-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
@@ -689,6 +688,54 @@
         let timerInterval = null;
         let jobActive = false;
 
+        // Restore timer state on page load
+        function restoreTimerState() {
+            const savedState = localStorage.getItem('jobTimerState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                if (state.jobActive && state.jobStartTime && state.jobTimeLimit) {
+                    // Check if timer hasn't expired
+                    const elapsed = Math.floor((Date.now() - state.jobStartTime) / 1000);
+                    const remaining = state.jobTimeLimit - elapsed;
+
+                    if (remaining > 0) {
+                        // Resume the timer
+                        jobActive = true;
+                        jobStartTime = state.jobStartTime;
+                        jobTimeLimit = state.jobTimeLimit;
+
+                        // Show the active view
+                        document.getElementById('jobPendingView').style.display = 'none';
+                        document.getElementById('jobActiveView').style.display = 'block';
+                        document.getElementById('countdownOverlay').style.display = 'block';
+
+                        // Start timer
+                        updateTimer();
+                        timerInterval = setInterval(updateTimer, 1000);
+                    } else {
+                        // Timer expired while away
+                        localStorage.removeItem('jobTimerState');
+                        if (currentDestination) {
+                            showResult(false);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Save timer state to localStorage
+        function saveTimerState() {
+            if (jobActive) {
+                localStorage.setItem('jobTimerState', JSON.stringify({
+                    jobActive: true,
+                    jobStartTime: jobStartTime,
+                    jobTimeLimit: jobTimeLimit
+                }));
+            } else {
+                localStorage.removeItem('jobTimerState');
+            }
+        }
+
         // Watch driver's location
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
@@ -741,6 +788,9 @@
             if (data && data.currentDestination) {
                 currentDestination = data.currentDestination;
                 updateDestinationUI();
+
+                // Restore timer if it was running
+                restoreTimerState();
             } else {
                 showWaitingMessage();
             }
@@ -896,36 +946,10 @@
         }
 
         window.openNavigation = function() {
-            if (currentDestination && driverLocation) {
-                isNavigating = !isNavigating;
-
-                if (isNavigating) {
-                    // Fit to route only when first starting navigation
-                    const bounds = L.latLngBounds(
-                        [driverLocation.lat, driverLocation.lng],
-                        [currentDestination.lat, currentDestination.lng]
-                    );
-                    map.fitBounds(bounds, { padding: [100, 100] });
-
-                    updateRoute();
-                    document.querySelector('.navigate-btn').textContent = 'Stop Navigation';
-                    document.querySelector('.navigate-btn').style.background = '#dc3545';
-                } else {
-                    // Stop navigation
-                    if (routeLine) {
-                        map.removeLayer(routeLine);
-                        routeLine = null;
-                    }
-                    document.querySelector('.navigate-btn').textContent = 'Start Navigation';
-                    document.querySelector('.navigate-btn').style.background = '#000';
-
-                    // Fit map to show both markers
-                    const bounds = L.latLngBounds(
-                        [driverLocation.lat, driverLocation.lng],
-                        [currentDestination.lat, currentDestination.lng]
-                    );
-                    map.fitBounds(bounds, { padding: [100, 100] });
-                }
+            if (currentDestination) {
+                // Open Google Maps with directions
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${currentDestination.lat},${currentDestination.lng}`;
+                window.open(url, '_blank');
             }
         };
 
@@ -979,13 +1003,15 @@
             jobTimeLimit = (currentDestination.timeLimit || 15) * 60; // convert to seconds
             jobStartTime = Date.now();
 
+            // Save state to localStorage
+            saveTimerState();
+
             // Hide pending view, show active view
             document.getElementById('jobPendingView').style.display = 'none';
             document.getElementById('jobActiveView').style.display = 'block';
 
             // Show countdown overlay
             document.getElementById('countdownOverlay').style.display = 'block';
-            document.getElementById('overlayJobDescription').textContent = currentDestination.jobDescription;
 
             // Minimize the card to show map
             document.getElementById('destinationCard').classList.add('minimized');
@@ -1040,6 +1066,9 @@
 
         function showResult(success) {
             jobActive = false;
+
+            // Clear saved state
+            saveTimerState();
 
             // Hide countdown overlay
             document.getElementById('countdownOverlay').style.display = 'none';
