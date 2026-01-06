@@ -578,7 +578,7 @@
                     ${dest.jobDescription ? `<div class="queue-item-hint">📋 ${dest.jobDescription}</div>` : ''}
                     ${dest.timeLimit ? `<div class="queue-item-hint">⏱️ ${dest.timeLimit} minute${dest.timeLimit !== 1 ? 's' : ''}</div>` : ''}
                     ${dest.hint ? `<div class="queue-item-hint">💡 ${dest.hint}</div>` : ''}
-                    ${dest.rider ? `<div class="queue-item-hint">👤 ${dest.rider.name} (${dest.rider.rating || 5.0}⭐)</div>` : ''}
+                    ${dest.gif ? `<div class="queue-item-hint">🎬 Has GIF</div>` : ''}
                     <div class="queue-item-actions">
                         <button class="queue-item-btn" onclick="editQueueItem(${index})">Edit</button>
                         ${index > 0 ? `<button class="queue-item-btn move-up" onclick="moveUp(${index})">↑</button>` : ''}

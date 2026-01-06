@@ -249,54 +249,10 @@
             <textarea id="hintInput" placeholder="Look for the red door..."></textarea>
         </div>
 
-        <div class="section-title">Rider Profile (Optional but Hilarious!)</div>
-
         <div class="input-group">
-            <label>Rider Name</label>
-            <input type="text" id="riderName" placeholder="Karen McDemands">
-        </div>
-
-        <div class="input-group">
-            <label>Avatar URL (image link)</label>
-            <input type="text" id="riderAvatar" placeholder="https://i.imgur.com/example.jpg">
-            <p class="info-text">Upload to imgur.com or use any image URL</p>
-        </div>
-
-        <div class="grid-2">
-            <div class="input-group">
-                <label>Rating (1-5)</label>
-                <input type="number" id="riderRating" min="1" max="5" step="0.1" placeholder="4.2">
-            </div>
-            <div class="input-group">
-                <label>Ride Count</label>
-                <input type="number" id="riderRideCount" placeholder="69">
-            </div>
-        </div>
-
-        <div class="input-group">
-            <label>Interests</label>
-            <input type="text" id="riderInterests" placeholder="Arguing with managers, essential oils, MLM schemes">
-        </div>
-
-        <div class="input-group">
-            <label>Favorite Music</label>
-            <input type="text" id="riderMusic" placeholder="Nickelback, on repeat">
-        </div>
-
-        <div class="input-group">
-            <label>Fun Fact</label>
-            <input type="text" id="riderFunFact" placeholder="Once got kicked out of a Build-A-Bear for yelling at kids">
-        </div>
-
-        <div class="input-group">
-            <label>Driver Note (Yellow warning banner)</label>
-            <textarea id="riderNote" placeholder="⚠️ May ask to speak to your manager. Bring air freshener."></textarea>
-        </div>
-
-        <div class="input-group">
-            <label>GIF URL (tenor, giphy, imgur)</label>
-            <input type="text" id="riderGif" placeholder="https://media.giphy.com/media/example.gif">
-            <p class="info-text">Right-click a GIF → "Copy image address"</p>
+            <label>GIF URL (Optional - for extra fun!)</label>
+            <input type="text" id="jobGif" placeholder="https://media.giphy.com/media/example.gif">
+            <p class="info-text">Right-click a GIF → "Copy image address" (tenor, giphy, imgur)</p>
         </div>
 
         <button class="btn" id="primaryBtn" onclick="addToQueue()">➕ Add to Queue</button>
@@ -352,18 +308,7 @@
             document.getElementById('successMessageInput').value = data.successMessage || '';
             document.getElementById('failureMessageInput').value = data.failureMessage || '';
             document.getElementById('hintInput').value = data.hint || '';
-
-            if (data.rider) {
-                document.getElementById('riderName').value = data.rider.name || '';
-                document.getElementById('riderAvatar').value = data.rider.avatar || '';
-                document.getElementById('riderRating').value = data.rider.rating || '';
-                document.getElementById('riderRideCount').value = data.rider.rideCount || '';
-                document.getElementById('riderInterests').value = data.rider.interests || '';
-                document.getElementById('riderMusic').value = data.rider.favoriteMusic || '';
-                document.getElementById('riderFunFact').value = data.rider.funFact || '';
-                document.getElementById('riderNote').value = data.rider.note || '';
-                document.getElementById('riderGif').value = data.rider.gif || '';
-            }
+            document.getElementById('jobGif').value = data.gif || '';
 
             // Set location
             selectedLocation = {
@@ -608,22 +553,6 @@
             }
         });
 
-        function collectRiderData() {
-            const name = document.getElementById('riderName').value.trim();
-            if (!name) return null;
-
-            return {
-                name: name,
-                avatar: document.getElementById('riderAvatar').value.trim() || null,
-                rating: parseFloat(document.getElementById('riderRating').value) || 5.0,
-                rideCount: parseInt(document.getElementById('riderRideCount').value) || 0,
-                interests: document.getElementById('riderInterests').value.trim() || null,
-                favoriteMusic: document.getElementById('riderMusic').value.trim() || null,
-                funFact: document.getElementById('riderFunFact').value.trim() || null,
-                note: document.getElementById('riderNote').value.trim() || null,
-                gif: document.getElementById('riderGif').value.trim() || null
-            };
-        }
 
         window.addToQueue = async function() {
             const jobTitle = document.getElementById('jobTitleInput').value.trim();
@@ -633,6 +562,7 @@
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+            const gif = document.getElementById('jobGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
@@ -672,8 +602,6 @@
                 }
             }
 
-            const riderData = collectRiderData();
-
             try {
                 // Get current queue
                 const docRef = doc(db, 'game', 'current');
@@ -691,7 +619,7 @@
                     successMessage: successMessage || null,
                     failureMessage: failureMessage || null,
                     hint: hint || null,
-                    rider: riderData
+                    gif: gif || null
                 });
 
                 await updateDoc(docRef, { queue: queue });
@@ -712,6 +640,7 @@
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+            const gif = document.getElementById('jobGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
@@ -750,8 +679,6 @@
                 }
             }
 
-            const riderData = collectRiderData();
-
             try {
                 await updateDoc(doc(db, 'game', 'current'), {
                     currentDestination: {
@@ -764,7 +691,7 @@
                         successMessage: successMessage || null,
                         failureMessage: failureMessage || null,
                         hint: hint || null,
-                        rider: riderData
+                        gif: gif || null
                     },
                     updatedAt: new Date().toISOString()
                 });
@@ -785,6 +712,7 @@
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+            const gif = document.getElementById('jobGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
@@ -823,8 +751,6 @@
                 }
             }
 
-            const riderData = collectRiderData();
-
             try {
                 const docRef = doc(db, 'game', 'current');
                 const docSnap = await getDoc(docRef);
@@ -841,7 +767,7 @@
                     successMessage: successMessage || null,
                     failureMessage: failureMessage || null,
                     hint: hint || null,
-                    rider: riderData
+                    gif: gif || null
                 };
 
                 await updateDoc(docRef, { queue: queue });
@@ -862,6 +788,7 @@
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+            const gif = document.getElementById('jobGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
@@ -900,8 +827,6 @@
                 }
             }
 
-            const riderData = collectRiderData();
-
             try {
                 await updateDoc(doc(db, 'game', 'current'), {
                     currentDestination: {
@@ -914,7 +839,7 @@
                         successMessage: successMessage || null,
                         failureMessage: failureMessage || null,
                         hint: hint || null,
-                        rider: riderData
+                        gif: gif || null
                     },
                     updatedAt: new Date().toISOString()
                 });
