@@ -24,6 +24,7 @@
             width: 100%;
             height: 100vh;
             z-index: 1;
+            filter: saturate(1.3) brightness(1.05);
         }
 
         .destination-card {
@@ -31,14 +32,15 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #fff;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.98) 0%, rgba(255,255,255,1) 20%);
             color: #000;
-            border-radius: 16px 16px 0 0;
-            box-shadow: 0 -2px 20px rgba(0,0,0,0.3);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.2);
             z-index: 1000;
             transition: transform 0.3s ease-out;
-            max-height: 85vh;
+            max-height: 90vh;
             overflow-y: auto;
+            backdrop-filter: blur(10px);
         }
 
         .destination-card.hidden {
@@ -280,6 +282,279 @@
             width: 20px;
             height: 20px;
         }
+
+        /* New Job Alert Styles */
+        .job-alert-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .job-alert-badge {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            opacity: 0.95;
+        }
+
+        .job-title {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .job-subtitle {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .job-description-section {
+            background: #f8f9fa;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .job-description-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #3b82f6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .job-description-text {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #1f2937;
+        }
+
+        .time-limit-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 12px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .time-limit-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .time-limit-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .time-limit-subtext {
+            font-size: 13px;
+            color: #92400e;
+            margin-top: 4px;
+        }
+
+        .countdown-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.92);
+            padding: 40px;
+            border-radius: 20px;
+            z-index: 2000;
+            text-align: center;
+            min-width: 320px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .countdown-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .countdown-timer {
+            font-size: 72px;
+            font-weight: 700;
+            color: #dc2626;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+        }
+
+        .countdown-timer.warning {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626 0%, #f87171 100%);
+            transition: width 0.5s linear;
+            border-radius: 4px;
+        }
+
+        .start-job-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s;
+        }
+
+        .start-job-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .complete-job-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+        }
+
+        .complete-job-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-content {
+            background: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+            animation: scaleIn 0.3s;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .result-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+        }
+
+        .result-icon.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+        }
+
+        .result-icon.failure {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: #fff;
+        }
+
+        .result-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .result-message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .result-btn {
+            width: 100%;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .job-status-pending {
+            display: block;
+        }
+
+        .job-status-active {
+            display: none;
+        }
+
+        .map-with-overlay {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -291,45 +566,100 @@
 
     <div id="waitingMessage" class="waiting-message">
         <h2>Ready to Roll!</h2>
-        <p>Waiting for your first destination...</p>
+        <p>Waiting for next job...</p>
     </div>
 
-    <div id="destinationCard" class="destination-card hidden minimized">
+    <div id="destinationCard" class="destination-card hidden">
         <div class="card-handle" onclick="toggleCard()"></div>
 
-        <div class="card-summary" onclick="toggleCard()">
-            <div class="card-summary-name" id="summaryName">Pickup Request</div>
-            <div class="card-summary-address" id="summaryAddress">Loading...</div>
+        <!-- Job Alert View (shown before starting) -->
+        <div id="jobPendingView" class="job-status-pending">
+            <div class="job-alert-header">
+                <div class="job-alert-badge">NEW JOB ALERT!</div>
+                <div class="job-title" id="jobTitle">Loading...</div>
+                <div class="job-subtitle" id="jobAddress">Loading...</div>
+            </div>
+
+            <div class="card-content">
+                <div id="jobDescription" class="job-description-section">
+                    <div class="job-description-label">JOB DESCRIPTION:</div>
+                    <div class="job-description-text" id="jobDescriptionText">Loading...</div>
+                </div>
+
+                <div id="timeLimitSection" class="time-limit-section">
+                    <div class="time-limit-label">TIME LIMIT:</div>
+                    <div class="time-limit-value" id="timeLimitDisplay">--:--</div>
+                    <div class="time-limit-subtext" id="timeLimitSubtext">You have XX to complete task</div>
+                </div>
+
+                <button class="start-job-btn" onclick="startJob()">START JOB</button>
+                <div class="info-text" style="text-align: center; margin-top: 12px;">
+                    You have <span id="timeForJob">15 minutes</span> to complete task
+                </div>
+            </div>
         </div>
 
-        <div class="card-content">
-            <div id="riderProfile" class="rider-profile" style="display: none;">
-                <div class="rider-header">
-                    <img id="riderAvatar" class="rider-avatar" src="" alt="">
-                    <div class="rider-info">
-                        <div class="rider-name" id="riderName"></div>
-                        <div class="rider-rating">
-                            <span class="rating-stars" id="riderStars"></span>
-                            <span id="riderRating"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="rider-details" id="riderDetails"></div>
-                <div id="riderNote" class="rider-note" style="display: none;"></div>
-                <img id="riderGif" class="rider-gif" style="display: none;" src="" alt="">
+        <!-- Active Job View (shown during countdown) -->
+        <div id="jobActiveView" class="job-status-active" style="display: none;">
+            <div class="card-handle" onclick="toggleCard()"></div>
+
+            <div class="card-summary" onclick="toggleCard()">
+                <div class="card-summary-name" id="summaryName">Active Job</div>
+                <div class="card-summary-address" id="summaryAddress">Loading...</div>
             </div>
 
-            <div class="destination-header">DESTINATION</div>
-            <div class="destination-address" id="destinationAddress">Loading...</div>
-            <div class="destination-hint" id="destinationHint" style="display: none;">
-                <strong>Hint:</strong>
-                <span id="hintText"></span>
+            <div class="card-content">
+                <div id="riderProfile" class="rider-profile" style="display: none;">
+                    <div class="rider-header">
+                        <img id="riderAvatar" class="rider-avatar" src="" alt="">
+                        <div class="rider-info">
+                            <div class="rider-name" id="riderName"></div>
+                            <div class="rider-rating">
+                                <span class="rating-stars" id="riderStars"></span>
+                                <span id="riderRating"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rider-details" id="riderDetails"></div>
+                    <div id="riderNote" class="rider-note" style="display: none;"></div>
+                    <img id="riderGif" class="rider-gif" style="display: none;" src="" alt="">
+                </div>
+
+                <div class="destination-header">DESTINATION</div>
+                <div class="destination-address" id="destinationAddress">Loading...</div>
+                <div class="destination-hint" id="destinationHint" style="display: none;">
+                    <strong>Hint:</strong>
+                    <span id="hintText"></span>
+                </div>
+                <div class="eta-info">
+                    <span id="distance">Calculating...</span>
+                    <span id="eta">ETA: --</span>
+                </div>
+                <button class="navigate-btn" onclick="openNavigation()">Start Navigation</button>
+                <button class="complete-job-btn" onclick="completeJob()">JOB COMPLETE</button>
             </div>
-            <div class="eta-info">
-                <span id="distance">Calculating...</span>
-                <span id="eta">ETA: --</span>
+        </div>
+    </div>
+
+    <!-- Countdown Overlay (shown during active job) -->
+    <div id="countdownOverlay" class="countdown-overlay" style="display: none;">
+        <div class="countdown-label">TIME REMAINING:</div>
+        <div class="countdown-timer" id="countdownTimer">15:00</div>
+        <div class="job-description-text" id="overlayJobDescription" style="color: #fff; margin-top: 12px;">Loading...</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <!-- Result Modal (success/failure) -->
+    <div id="resultModal" class="result-modal" style="display: none;">
+        <div class="result-content">
+            <div class="result-icon" id="resultIcon">
+                <span id="resultIconSymbol">✓</span>
             </div>
-            <button class="navigate-btn" onclick="openNavigation()">Start Navigation</button>
+            <div class="result-title" id="resultTitle">JOB COMPLETE</div>
+            <div class="result-message" id="resultMessage">Great job! You completed the task on time.</div>
+            <button class="result-btn" onclick="closeResultModal()">BACK TO MAP</button>
         </div>
     </div>
 
@@ -352,9 +682,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Initialize map
+        // Initialize map with colorful tiles
         const map = L.map('map').setView([37.7749, -122.4194], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap, © CARTO',
             subdomains: 'abcd',
             maxZoom: 20
@@ -366,6 +696,12 @@
         let driverLocation = null;
         let routeLine = null;
         let isNavigating = false;
+
+        // Job timer variables
+        let jobStartTime = null;
+        let jobTimeLimit = null; // in seconds
+        let timerInterval = null;
+        let jobActive = false;
 
         // Watch driver's location
         if (navigator.geolocation) {
@@ -428,6 +764,29 @@
             document.getElementById('waitingMessage').style.display = 'none';
             document.getElementById('destinationCard').classList.remove('hidden');
 
+            // Extract job info from destination
+            const jobTitle = currentDestination.jobTitle || currentDestination.rider?.name || 'Mystery Job';
+            const jobDescription = currentDestination.jobDescription || currentDestination.hint || 'Complete the task at this location.';
+            const timeLimit = currentDestination.timeLimit || 15; // default 15 minutes
+            const successMessage = currentDestination.successMessage || 'Great job! You completed the task on time.';
+            const failureMessage = currentDestination.failureMessage || 'Time\'s up! You didn\'t complete the task in time.';
+
+            // Store for later use
+            currentDestination.jobTitle = jobTitle;
+            currentDestination.jobDescription = jobDescription;
+            currentDestination.timeLimit = timeLimit;
+            currentDestination.successMessage = successMessage;
+            currentDestination.failureMessage = failureMessage;
+
+            // Update pending view
+            document.getElementById('jobTitle').textContent = jobTitle;
+            document.getElementById('jobAddress').textContent = currentDestination.address;
+            document.getElementById('jobDescriptionText').textContent = jobDescription;
+            document.getElementById('timeLimitDisplay').textContent = formatTime(timeLimit * 60);
+            document.getElementById('timeLimitSubtext').textContent = `You have ${timeLimit} minute${timeLimit !== 1 ? 's' : ''} to complete task`;
+            document.getElementById('timeForJob').textContent = `${timeLimit} minute${timeLimit !== 1 ? 's' : ''}`;
+
+            // Update active view (for when job starts)
             document.getElementById('destinationAddress').textContent = currentDestination.address;
             document.getElementById('summaryAddress').textContent = currentDestination.address;
 
@@ -662,6 +1021,124 @@
 
         window.toggleMode = function() {
             window.location.href = 'organizer.html';
+        };
+
+        // Format seconds to MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Start the job timer
+        window.startJob = function() {
+            if (!currentDestination) return;
+
+            jobActive = true;
+            jobTimeLimit = (currentDestination.timeLimit || 15) * 60; // convert to seconds
+            jobStartTime = Date.now();
+
+            // Hide pending view, show active view
+            document.getElementById('jobPendingView').style.display = 'none';
+            document.getElementById('jobActiveView').style.display = 'block';
+
+            // Show countdown overlay
+            document.getElementById('countdownOverlay').style.display = 'block';
+            document.getElementById('overlayJobDescription').textContent = currentDestination.jobDescription;
+
+            // Minimize the card to show map
+            document.getElementById('destinationCard').classList.add('minimized');
+
+            // Start timer
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        };
+
+        function updateTimer() {
+            if (!jobActive) return;
+
+            const elapsed = Math.floor((Date.now() - jobStartTime) / 1000);
+            const remaining = Math.max(0, jobTimeLimit - elapsed);
+
+            // Update countdown display
+            const timerElement = document.getElementById('countdownTimer');
+            timerElement.textContent = formatTime(remaining);
+
+            // Add warning animation when under 1 minute
+            if (remaining <= 60 && remaining > 0) {
+                timerElement.classList.add('warning');
+            } else {
+                timerElement.classList.remove('warning');
+            }
+
+            // Update progress bar
+            const progress = (remaining / jobTimeLimit) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            // Check if time's up
+            if (remaining === 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                showResult(false);
+            }
+        }
+
+        // Complete the job
+        window.completeJob = function() {
+            if (!jobActive) return;
+
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            const elapsed = Math.floor((Date.now() - jobStartTime) / 1000);
+            const remaining = jobTimeLimit - elapsed;
+
+            // Success if time remaining
+            showResult(remaining > 0);
+        };
+
+        function showResult(success) {
+            jobActive = false;
+
+            // Hide countdown overlay
+            document.getElementById('countdownOverlay').style.display = 'none';
+
+            // Show result modal
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
+            const iconSymbol = document.getElementById('resultIconSymbol');
+            const title = document.getElementById('resultTitle');
+            const message = document.getElementById('resultMessage');
+
+            if (success) {
+                icon.className = 'result-icon success';
+                iconSymbol.textContent = '✓';
+                title.textContent = 'JOB COMPLETE';
+                message.textContent = currentDestination.successMessage || 'Great job! You completed the task on time.';
+            } else {
+                icon.className = 'result-icon failure';
+                iconSymbol.textContent = '✕';
+                title.textContent = 'DELIVERY FAILED';
+                message.textContent = currentDestination.failureMessage || 'Time\'s up! You didn\'t complete the task in time.';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        window.closeResultModal = function() {
+            // Hide modal
+            document.getElementById('resultModal').style.display = 'none';
+
+            // Reset job state
+            jobActive = false;
+            jobStartTime = null;
+            jobTimeLimit = null;
+
+            // Clear current destination and show waiting message
+            showWaitingMessage();
+            document.getElementById('destinationCard').classList.add('hidden');
+            document.getElementById('jobPendingView').style.display = 'block';
+            document.getElementById('jobActiveView').style.display = 'none';
         };
     </script>
 </body>

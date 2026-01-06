@@ -338,9 +338,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Initialize map
+        // Initialize map with colorful tiles
         const map = L.map('map').setView([37.7749, -122.4194], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap, © CARTO',
             subdomains: 'abcd',
             maxZoom: 20
@@ -572,8 +572,11 @@
                 <div class="queue-item">
                     <div>
                         <span class="queue-item-number">${index + 1}</span>
-                        <span class="queue-item-address">${dest.address}</span>
+                        <span class="queue-item-address">${dest.jobTitle || dest.address}</span>
                     </div>
+                    <div class="queue-item-hint" style="color: #333;">📍 ${dest.address}</div>
+                    ${dest.jobDescription ? `<div class="queue-item-hint">📋 ${dest.jobDescription}</div>` : ''}
+                    ${dest.timeLimit ? `<div class="queue-item-hint">⏱️ ${dest.timeLimit} minute${dest.timeLimit !== 1 ? 's' : ''}</div>` : ''}
                     ${dest.hint ? `<div class="queue-item-hint">💡 ${dest.hint}</div>` : ''}
                     ${dest.rider ? `<div class="queue-item-hint">👤 ${dest.rider.name} (${dest.rider.rating || 5.0}⭐)</div>` : ''}
                     <div class="queue-item-actions">

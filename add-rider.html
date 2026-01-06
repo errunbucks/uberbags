@@ -204,7 +204,13 @@
             <span id="selectedLocationText">None</span>
         </div>
 
-        <div class="section-title">Destination Details</div>
+        <div class="section-title">Job Details</div>
+
+        <div class="input-group">
+            <label>Job Title *</label>
+            <input type="text" id="jobTitleInput" placeholder="Win $40 at the Casino" required>
+            <p class="info-text">This is the main headline the driver sees</p>
+        </div>
 
         <div class="input-group">
             <label>Address or Location Name *</label>
@@ -213,6 +219,29 @@
                 <div id="autocompleteResults" class="autocomplete-results" style="display: none;"></div>
             </div>
             <p class="info-text">Type to search or click on the map above</p>
+        </div>
+
+        <div class="input-group">
+            <label>Job Description *</label>
+            <textarea id="jobDescriptionInput" placeholder="You have 20 euros in the envelope. Go sit at the casino and don't come back until you have $40" required></textarea>
+            <p class="info-text">Explain what the driver needs to do</p>
+        </div>
+
+        <div class="input-group">
+            <label>Time Limit (minutes) *</label>
+            <input type="number" id="timeLimitInput" min="1" max="180" placeholder="15" value="15">
+            <p class="info-text">How long they have to complete the job</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="input-group">
+                <label>Success Message</label>
+                <textarea id="successMessageInput" placeholder="Amazing! You completed the challenge!" style="min-height: 80px;"></textarea>
+            </div>
+            <div class="input-group">
+                <label>Failure Message</label>
+                <textarea id="failureMessageInput" placeholder="Time's up! Return to base with the undelivered items." style="min-height: 80px;"></textarea>
+            </div>
         </div>
 
         <div class="input-group">
@@ -293,9 +322,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Initialize map
+        // Initialize map with colorful tiles
         const map = L.map('map').setView([37.7749, -122.4194], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap, © CARTO',
             subdomains: 'abcd',
             maxZoom: 20
@@ -316,7 +345,12 @@
 
             // Populate form with existing data
             const data = editMode.data;
+            document.getElementById('jobTitleInput').value = data.jobTitle || '';
             document.getElementById('addressInput').value = data.address || '';
+            document.getElementById('jobDescriptionInput').value = data.jobDescription || '';
+            document.getElementById('timeLimitInput').value = data.timeLimit || 15;
+            document.getElementById('successMessageInput').value = data.successMessage || '';
+            document.getElementById('failureMessageInput').value = data.failureMessage || '';
             document.getElementById('hintInput').value = data.hint || '';
 
             if (data.rider) {
@@ -592,11 +626,26 @@
         }
 
         window.addToQueue = async function() {
+            const jobTitle = document.getElementById('jobTitleInput').value.trim();
             const address = document.getElementById('addressInput').value.trim();
+            const jobDescription = document.getElementById('jobDescriptionInput').value.trim();
+            const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
+            const successMessage = document.getElementById('successMessageInput').value.trim();
+            const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+
+            if (!jobTitle) {
+                alert('Please enter a job title');
+                return;
+            }
 
             if (!address) {
                 alert('Please enter an address or click on the map');
+                return;
+            }
+
+            if (!jobDescription) {
+                alert('Please enter a job description');
                 return;
             }
 
@@ -636,6 +685,11 @@
                     lat: location.lat,
                     lng: location.lng,
                     address: address,
+                    jobTitle: jobTitle,
+                    jobDescription: jobDescription,
+                    timeLimit: timeLimit,
+                    successMessage: successMessage || null,
+                    failureMessage: failureMessage || null,
                     hint: hint || null,
                     rider: riderData
                 });
@@ -651,11 +705,26 @@
         };
 
         window.sendNow = async function() {
+            const jobTitle = document.getElementById('jobTitleInput').value.trim();
             const address = document.getElementById('addressInput').value.trim();
+            const jobDescription = document.getElementById('jobDescriptionInput').value.trim();
+            const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
+            const successMessage = document.getElementById('successMessageInput').value.trim();
+            const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+
+            if (!jobTitle) {
+                alert('Please enter a job title');
+                return;
+            }
 
             if (!address) {
                 alert('Please enter an address or click on the map');
+                return;
+            }
+
+            if (!jobDescription) {
+                alert('Please enter a job description');
                 return;
             }
 
@@ -689,6 +758,11 @@
                         lat: location.lat,
                         lng: location.lng,
                         address: address,
+                        jobTitle: jobTitle,
+                        jobDescription: jobDescription,
+                        timeLimit: timeLimit,
+                        successMessage: successMessage || null,
+                        failureMessage: failureMessage || null,
                         hint: hint || null,
                         rider: riderData
                     },
@@ -704,11 +778,26 @@
         };
 
         window.updateQueueItem = async function() {
+            const jobTitle = document.getElementById('jobTitleInput').value.trim();
             const address = document.getElementById('addressInput').value.trim();
+            const jobDescription = document.getElementById('jobDescriptionInput').value.trim();
+            const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
+            const successMessage = document.getElementById('successMessageInput').value.trim();
+            const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+
+            if (!jobTitle) {
+                alert('Please enter a job title');
+                return;
+            }
 
             if (!address) {
                 alert('Please enter an address');
+                return;
+            }
+
+            if (!jobDescription) {
+                alert('Please enter a job description');
                 return;
             }
 
@@ -746,6 +835,11 @@
                     lat: location.lat,
                     lng: location.lng,
                     address: address,
+                    jobTitle: jobTitle,
+                    jobDescription: jobDescription,
+                    timeLimit: timeLimit,
+                    successMessage: successMessage || null,
+                    failureMessage: failureMessage || null,
                     hint: hint || null,
                     rider: riderData
                 };
@@ -761,11 +855,26 @@
         };
 
         window.updateCurrentDestination = async function() {
+            const jobTitle = document.getElementById('jobTitleInput').value.trim();
             const address = document.getElementById('addressInput').value.trim();
+            const jobDescription = document.getElementById('jobDescriptionInput').value.trim();
+            const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
+            const successMessage = document.getElementById('successMessageInput').value.trim();
+            const failureMessage = document.getElementById('failureMessageInput').value.trim();
             const hint = document.getElementById('hintInput').value.trim();
+
+            if (!jobTitle) {
+                alert('Please enter a job title');
+                return;
+            }
 
             if (!address) {
                 alert('Please enter an address');
+                return;
+            }
+
+            if (!jobDescription) {
+                alert('Please enter a job description');
                 return;
             }
 
@@ -799,6 +908,11 @@
                         lat: location.lat,
                         lng: location.lng,
                         address: address,
+                        jobTitle: jobTitle,
+                        jobDescription: jobDescription,
+                        timeLimit: timeLimit,
+                        successMessage: successMessage || null,
+                        failureMessage: failureMessage || null,
                         hint: hint || null,
                         rider: riderData
                     },
