@@ -787,6 +787,9 @@
             );
         }
 
+        // Track if this is the first load
+        let isFirstLoad = true;
+
         // Listen for destination updates
         onSnapshot(doc(db, 'game', 'current'), (doc) => {
             const data = doc.data();
@@ -794,8 +797,11 @@
                 currentDestination = data.currentDestination;
                 updateDestinationUI();
 
-                // Restore timer if it was running
-                restoreTimerState();
+                // Only restore timer on first load
+                if (isFirstLoad) {
+                    restoreTimerState();
+                    isFirstLoad = false;
+                }
             } else {
                 showWaitingMessage();
             }
@@ -805,10 +811,11 @@
             document.getElementById('waitingMessage').style.display = 'none';
             document.getElementById('destinationCard').classList.remove('hidden');
 
-            // Reset to pending view (in case job was previously active)
-            document.getElementById('jobPendingView').style.display = 'block';
-            document.getElementById('jobActiveView').style.display = 'none';
-            jobActive = false;
+            // Only reset to pending view if job is not currently active
+            if (!jobActive) {
+                document.getElementById('jobPendingView').style.display = 'block';
+                document.getElementById('jobActiveView').style.display = 'none';
+            }
 
             // Extract job info from destination
             const jobTitle = currentDestination.jobTitle || currentDestination.rider?.name || 'Mystery Job';
