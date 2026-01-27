@@ -916,6 +916,19 @@
         async function updateRoute() {
             if (!driverLocation || !currentDestination) return;
 
+            // Calculate distance - don't try to route if > 1000km apart
+            const distance = calculateDistance(
+                driverLocation.lat,
+                driverLocation.lng,
+                currentDestination.lat,
+                currentDestination.lng
+            );
+
+            if (distance > 1000) {
+                // Too far for driving route, skip
+                return;
+            }
+
             try {
                 // Use OSRM (Open Source Routing Machine) for routing
                 const url = `https://router.project-osrm.org/route/v1/driving/${driverLocation.lng},${driverLocation.lat};${currentDestination.lng},${currentDestination.lat}?overview=full&geometries=geojson`;
@@ -946,7 +959,8 @@
                     // Don't auto-zoom while navigating - let user pan/zoom manually
                 }
             } catch (error) {
-                console.error('Error fetching route:', error);
+                // Silently fail - locations may be too far apart for routing
+                console.log('Route unavailable (locations may be too far apart)');
             }
         }
 

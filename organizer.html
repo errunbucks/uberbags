@@ -485,6 +485,19 @@
         async function updateRoute() {
             if (!driverLocation || !currentDestination) return;
 
+            // Calculate distance - don't try to route if > 1000km apart
+            const distance = calculateDistance(
+                driverLocation.lat,
+                driverLocation.lng,
+                currentDestination.lat,
+                currentDestination.lng
+            );
+
+            if (distance > 1000) {
+                // Too far for driving route, skip
+                return;
+            }
+
             try {
                 const url = `https://router.project-osrm.org/route/v1/driving/${driverLocation.lng},${driverLocation.lat};${currentDestination.lng},${currentDestination.lat}?overview=full&geometries=geojson`;
 
@@ -512,8 +525,20 @@
                     map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
                 }
             } catch (error) {
-                console.error('Error fetching route:', error);
+                // Silently fail - locations may be too far apart for routing
+                console.log('Route unavailable (locations may be too far apart)');
             }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
         }
 
         function collectRiderData() {
