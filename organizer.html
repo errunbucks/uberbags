@@ -732,12 +732,14 @@
                         updateData.jobResult = {
                             status: 'completed',
                             message: job.successMessage || 'Great job!',
+                            gifUrl: job.successGif || null,
                             timestamp: Date.now()
                         };
                     } else if (newStatus === 'failed') {
                         updateData.jobResult = {
                             status: 'failed',
                             message: job.failureMessage || 'Better luck next time!',
+                            gifUrl: job.failureGif || null,
                             timestamp: Date.now()
                         };
                     }

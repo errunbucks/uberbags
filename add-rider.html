@@ -245,13 +245,14 @@
         </div>
 
         <div class="input-group">
-            <label>Hint (Optional)</label>
-            <textarea id="hintInput" placeholder="Look for the red door..."></textarea>
+            <label>Success GIF URL (Optional - shown when job completed)</label>
+            <input type="text" id="successGif" placeholder="https://media.giphy.com/media/example.gif">
+            <p class="info-text">Right-click a GIF → "Copy image address" (tenor, giphy, imgur)</p>
         </div>
 
         <div class="input-group">
-            <label>GIF URL (Optional - for extra fun!)</label>
-            <input type="text" id="jobGif" placeholder="https://media.giphy.com/media/example.gif">
+            <label>Failure GIF URL (Optional - shown when job failed)</label>
+            <input type="text" id="failureGif" placeholder="https://media.giphy.com/media/example.gif">
             <p class="info-text">Right-click a GIF → "Copy image address" (tenor, giphy, imgur)</p>
         </div>
 
@@ -307,8 +308,8 @@
             document.getElementById('timeLimitInput').value = data.timeLimit || 15;
             document.getElementById('successMessageInput').value = data.successMessage || '';
             document.getElementById('failureMessageInput').value = data.failureMessage || '';
-            document.getElementById('hintInput').value = data.hint || '';
-            document.getElementById('jobGif').value = data.gif || '';
+            document.getElementById('successGif').value = data.successGif || '';
+            document.getElementById('failureGif').value = data.failureGif || '';
 
             // Set location
             selectedLocation = {
@@ -552,8 +553,8 @@
             const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
-            const hint = document.getElementById('hintInput').value.trim();
-            const gif = document.getElementById('jobGif').value.trim();
+            const successGif = document.getElementById('successGif').value.trim();
+            const failureGif = document.getElementById('failureGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
@@ -611,8 +612,8 @@
                     timeLimit: timeLimit,
                     successMessage: successMessage || null,
                     failureMessage: failureMessage || null,
-                    hint: hint || null,
-                    gif: gif || null
+                    successGif: successGif || null,
+                    failureGif: failureGif || null
                 };
 
                 jobs.push(newJob);
@@ -634,8 +635,8 @@
             const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
-            const hint = document.getElementById('hintInput').value.trim();
-            const gif = document.getElementById('jobGif').value.trim();
+            const successGif = document.getElementById('successGif').value.trim();
+            const failureGif = document.getElementById('failureGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
@@ -706,8 +707,8 @@
             const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
-            const hint = document.getElementById('hintInput').value.trim();
-            const gif = document.getElementById('jobGif').value.trim();
+            const successGif = document.getElementById('successGif').value.trim();
+            const failureGif = document.getElementById('failureGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
@@ -788,8 +789,8 @@
             const timeLimit = parseInt(document.getElementById('timeLimitInput').value) || 15;
             const successMessage = document.getElementById('successMessageInput').value.trim();
             const failureMessage = document.getElementById('failureMessageInput').value.trim();
-            const hint = document.getElementById('hintInput').value.trim();
-            const gif = document.getElementById('jobGif').value.trim();
+            const successGif = document.getElementById('successGif').value.trim();
+            const failureGif = document.getElementById('failureGif').value.trim();
 
             if (!jobTitle) {
                 alert('Please enter a job title');
