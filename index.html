@@ -37,8 +37,7 @@
             border-radius: 24px 24px 0 0;
             box-shadow: 0 -4px 30px rgba(0,0,0,0.2);
             z-index: 1000;
-            transition: transform 0.3s ease-out;
-            max-height: 90vh;
+            max-height: 25vh;
             overflow-y: auto;
             backdrop-filter: blur(10px);
         }
@@ -706,6 +705,11 @@
             document.getElementById('waitingMessage').style.display = 'none';
             document.getElementById('destinationCard').classList.remove('hidden');
 
+            // Fix map size after card is shown
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+
             // Extract job info from destination
             const jobTitle = currentDestination.jobTitle || currentDestination.rider?.name || 'Mystery Job';
             const jobDescription = currentDestination.jobDescription || currentDestination.hint || 'Complete the task at this location.';
@@ -765,7 +769,7 @@
                     [driverLocation.lat, driverLocation.lng],
                     [currentDestination.lat, currentDestination.lng]
                 );
-                map.fitBounds(bounds, { padding: [100, 100] });
+                map.fitBounds(bounds, { padding: [50, 50], paddingBottomRight: [0, 200] });
             }
         }
 
@@ -892,7 +896,7 @@
                     [driverLocation.lat, driverLocation.lng],
                     [currentDestination.lat, currentDestination.lng]
                 );
-                map.fitBounds(bounds, { padding: [100, 100] });
+                map.fitBounds(bounds, { padding: [50, 50], paddingBottomRight: [0, 200] });
             }
 
             // Start timer
