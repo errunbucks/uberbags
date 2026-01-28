@@ -499,14 +499,13 @@
             }
 
             try {
-                // Use Mapbox Directions API for routing
-                const accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'; // Mapbox public token
-                const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${driverLocation.lng},${driverLocation.lat};${currentDestination.lng},${currentDestination.lat}?geometries=geojson&access_token=${accessToken}`;
+                // Use OSRM (Open Source Routing Machine) for routing
+                const url = `https://router.project-osrm.org/route/v1/driving/${driverLocation.lng},${driverLocation.lat};${currentDestination.lng},${currentDestination.lat}?overview=full&geometries=geojson`;
 
                 const response = await fetch(url);
                 const data = await response.json();
 
-                if (data.routes && data.routes.length > 0) {
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
                     const route = data.routes[0];
                     const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
 
