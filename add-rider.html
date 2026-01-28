@@ -191,7 +191,7 @@
 </head>
 <body>
     <div class="header">
-        <button class="back-btn" onclick="goBack()">←</button>
+        <button class="back-btn" id="backBtn">←</button>
         <h1 id="pageTitle">Add New Job</h1>
     </div>
 
@@ -255,7 +255,7 @@
             <p class="info-text">Right-click a GIF → "Copy image address" (tenor, giphy, imgur)</p>
         </div>
 
-        <button class="btn" id="primaryBtn" onclick="addToQueue()">➕ Add Job</button>
+        <button class="btn" id="primaryBtn">➕ Add Job</button>
         <button class="btn" id="cancelBtn" style="background: #666; margin-top: 12px;">Cancel</button>
     </div>
 
@@ -332,8 +332,6 @@
 
             // Update buttons
             document.getElementById('primaryBtn').textContent = '💾 Update Job';
-            document.getElementById('primaryBtn').setAttribute('onclick', 'updateQueueItem()');
-            document.getElementById('secondaryBtn').style.display = 'none';
         }
 
         // Google Places Autocomplete
@@ -860,8 +858,21 @@
         };
 
         // Add event listeners for buttons (since onclick in HTML doesn't work well with modules)
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'organizer.html';
+        });
+
         document.getElementById('cancelBtn').addEventListener('click', () => {
             window.location.href = 'organizer.html';
+        });
+
+        // Handle primary button (Add or Update depending on mode)
+        document.getElementById('primaryBtn').addEventListener('click', () => {
+            if (editMode) {
+                updateQueueItem();
+            } else {
+                addToQueue();
+            }
         });
     </script>
 </body>
