@@ -463,19 +463,25 @@
             box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
 
-        .result-modal {
+        .result-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
             z-index: 3000;
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: fadeIn 0.3s;
+            animation: fadeIn 0.5s;
+        }
+
+        .result-overlay.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+        }
+
+        .result-overlay.failure {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.95) 0%, rgba(185, 28, 28, 0.95) 100%);
         }
 
         @keyframes fadeIn {
@@ -484,64 +490,33 @@
         }
 
         .result-content {
-            background: #fff;
-            padding: 40px;
-            border-radius: 20px;
             text-align: center;
-            max-width: 400px;
-            margin: 20px;
-            animation: scaleIn 0.3s;
-        }
-
-        @keyframes scaleIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            color: #fff;
+            padding: 40px;
         }
 
         .result-icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 50px;
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: scaleIn 0.5s;
         }
 
-        .result-icon.success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #fff;
-        }
-
-        .result-icon.failure {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            color: #fff;
+        @keyframes scaleIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         .result-title {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .result-message {
-            font-size: 16px;
-            color: #666;
+            font-size: 18px;
             line-height: 1.5;
-            margin-bottom: 24px;
-        }
-
-        .result-btn {
-            width: 100%;
-            background: #3b82f6;
-            color: #fff;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         .job-status-pending {
@@ -607,15 +582,12 @@
         </div>
     </div>
 
-    <!-- Result Modal (success/failure) -->
-    <div id="resultModal" class="result-modal" style="display: none;">
+    <!-- Result Overlay (success/failure) -->
+    <div id="resultOverlay" class="result-overlay" style="display: none;">
         <div class="result-content">
-            <div class="result-icon" id="resultIcon">
-                <span id="resultIconSymbol">✓</span>
-            </div>
+            <div class="result-icon" id="resultIcon">✓</div>
             <div class="result-title" id="resultTitle">JOB COMPLETE</div>
-            <div class="result-message" id="resultMessage">Great job! You completed the task on time.</div>
-            <button class="result-btn" onclick="closeResultModal()">BACK TO MAP</button>
+            <div class="result-message" id="resultMessage">Great job!</div>
         </div>
     </div>
 
@@ -1083,32 +1055,31 @@
             stopJobTimer();
         }
 
-        // Show result modal (completed/failed)
+        // Show result overlay (completed/failed)
         window.showResultModal = function(status, message) {
-            const modal = document.getElementById('resultModal');
+            const overlay = document.getElementById('resultOverlay');
             const icon = document.getElementById('resultIcon');
-            const iconSymbol = document.getElementById('resultIconSymbol');
             const title = document.getElementById('resultTitle');
             const messageEl = document.getElementById('resultMessage');
 
             if (status === 'completed') {
-                icon.className = 'result-icon success';
-                iconSymbol.textContent = '✓';
-                title.textContent = 'JOB COMPLETE';
-                messageEl.textContent = message || 'Great job! You completed the task on time.';
+                overlay.className = 'result-overlay success';
+                icon.textContent = '✓';
+                title.textContent = 'JOB COMPLETE!';
+                messageEl.textContent = message || 'Great job!';
             } else {
-                icon.className = 'result-icon failure';
-                iconSymbol.textContent = '✗';
+                overlay.className = 'result-overlay failure';
+                icon.textContent = '✗';
                 title.textContent = 'JOB FAILED';
-                messageEl.textContent = message || 'Time ran out! Better luck next time.';
+                messageEl.textContent = message || 'Better luck next time!';
             }
 
-            modal.style.display = 'flex';
-        };
+            overlay.style.display = 'flex';
 
-        // Close result modal
-        window.closeResultModal = function() {
-            document.getElementById('resultModal').style.display = 'none';
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 3000);
         };
     </script>
 </body>
