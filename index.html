@@ -47,9 +47,6 @@
             display: none;
         }
 
-        .destination-card.minimized {
-            transform: translateY(calc(100% - 160px));
-        }
 
         .card-handle {
             width: 40px;
@@ -365,63 +362,6 @@
             margin-top: 4px;
         }
 
-        .countdown-overlay {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.92);
-            padding: 20px 30px;
-            border-radius: 16px;
-            z-index: 2000;
-            text-align: center;
-            min-width: 280px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-
-        .countdown-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .countdown-timer {
-            font-size: 48px;
-            font-weight: 700;
-            color: #dc2626;
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
-            margin-bottom: 4px;
-            text-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
-        }
-
-        .countdown-timer.warning {
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 8px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #dc2626 0%, #f87171 100%);
-            transition: width 0.5s linear;
-            border-radius: 4px;
-        }
 
         .start-job-btn {
             width: 100%;
@@ -545,12 +485,19 @@
     </div>
 
     <div id="destinationCard" class="destination-card hidden">
-        <div class="card-handle" onclick="toggleCard()"></div>
-
         <div class="job-alert-header">
             <div class="job-alert-badge">ACTIVE JOB</div>
             <div class="job-title" id="jobTitle">Loading...</div>
             <div class="job-subtitle" id="jobAddress">Loading...</div>
+
+            <!-- Timer integrated into header -->
+            <div id="timerDisplay" style="display: none; margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; opacity: 0.9;">TIME REMAINING</div>
+                <div style="font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums;" id="timerText">15:00</div>
+                <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; margin-top: 8px;">
+                    <div id="timerProgressBar" style="height: 100%; background: #fff; transition: width 0.5s linear; border-radius: 3px;"></div>
+                </div>
+            </div>
         </div>
 
         <div class="card-content">
@@ -570,15 +517,6 @@
                 <span id="distance">Calculating...</span>
                 <span id="eta">ETA: --</span>
             </div>
-        </div>
-    </div>
-
-    <!-- Countdown Overlay (shown during active job) -->
-    <div id="countdownOverlay" class="countdown-overlay" style="display: none;">
-        <div class="countdown-label">TIME REMAINING</div>
-        <div class="countdown-timer" id="countdownTimer">15:00</div>
-        <div class="progress-bar-container">
-            <div class="progress-bar" id="progressBar"></div>
         </div>
     </div>
 
@@ -648,10 +586,8 @@
                         jobStartTime = state.jobStartTime;
                         jobTimeLimit = state.jobTimeLimit;
 
-                        // Show the active view
-                        document.getElementById('jobPendingView').style.display = 'none';
-                        document.getElementById('jobActiveView').style.display = 'block';
-                        document.getElementById('countdownOverlay').style.display = 'block';
+                        // Show the timer
+                        document.getElementById('timerDisplay').style.display = 'block';
 
                         // Restore navigation
                         if (driverLocation && currentDestination) {
@@ -921,37 +857,6 @@
             }
         }
 
-        window.toggleCard = function() {
-            const card = document.getElementById('destinationCard');
-            card.classList.toggle('minimized');
-        };
-
-        // Add touch swipe support
-        let touchStartY = 0;
-        let touchEndY = 0;
-
-        document.getElementById('destinationCard').addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-        });
-
-        document.getElementById('destinationCard').addEventListener('touchmove', (e) => {
-            touchEndY = e.touches[0].clientY;
-        });
-
-        document.getElementById('destinationCard').addEventListener('touchend', () => {
-            const card = document.getElementById('destinationCard');
-            const swipeDistance = touchStartY - touchEndY;
-
-            // Swipe up (expand)
-            if (swipeDistance > 50) {
-                card.classList.remove('minimized');
-            }
-            // Swipe down (minimize)
-            else if (swipeDistance < -50) {
-                card.classList.add('minimized');
-            }
-        });
-
         window.toggleMode = function() {
             window.location.href = 'organizer.html';
         };
@@ -974,11 +879,8 @@
             // Save state to localStorage
             saveTimerState();
 
-            // Show countdown overlay
-            document.getElementById('countdownOverlay').style.display = 'block';
-
-            // Minimize the card to show map
-            document.getElementById('destinationCard').classList.add('minimized');
+            // Show timer in card
+            document.getElementById('timerDisplay').style.display = 'block';
 
             // Auto-start navigation
             if (driverLocation && currentDestination) {
@@ -1009,11 +911,8 @@
             // Clear saved state
             saveTimerState();
 
-            // Hide countdown overlay
-            document.getElementById('countdownOverlay').style.display = 'none';
-
-            // Expand the card
-            document.getElementById('destinationCard').classList.remove('minimized');
+            // Hide timer in card
+            document.getElementById('timerDisplay').style.display = 'none';
 
             // Stop navigation
             if (routeLine) {
@@ -1029,20 +928,20 @@
             const elapsed = Math.floor((Date.now() - jobStartTime) / 1000);
             const remaining = Math.max(0, jobTimeLimit - elapsed);
 
-            // Update countdown display
-            const timerElement = document.getElementById('countdownTimer');
+            // Update timer display in card
+            const timerElement = document.getElementById('timerText');
             timerElement.textContent = formatTime(remaining);
 
-            // Add warning animation when under 1 minute
+            // Add warning color when under 1 minute
             if (remaining <= 60 && remaining > 0) {
-                timerElement.classList.add('warning');
+                timerElement.style.color = '#dc2626';
             } else {
-                timerElement.classList.remove('warning');
+                timerElement.style.color = '#fff';
             }
 
             // Update progress bar
             const progress = (remaining / jobTimeLimit) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('timerProgressBar').style.width = progress + '%';
 
             // Check if time's up
             if (remaining === 0) {
