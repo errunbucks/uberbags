@@ -308,6 +308,11 @@
             <p class="info-text" style="text-align: center; margin-top: 8px;">Create new job with title, description, and timer</p>
         </div>
 
+        <div class="section">
+            <div class="section-title">Quick Actions</div>
+            <button class="btn btn-danger" onclick="clearActiveJob()">🚫 Clear Active Job</button>
+        </div>
+
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -732,6 +737,22 @@
             } catch (error) {
                 console.error('Error deleting job:', error);
                 alert('Error deleting job');
+            }
+        };
+
+        // Clear active job (useful for fixing issues)
+        window.clearActiveJob = async function() {
+            if (!confirm('Clear the active job? This will stop the timer on the driver page.')) return;
+
+            try {
+                await updateDoc(doc(db, 'game', 'current'), {
+                    currentDestination: null,
+                    activeJobId: null
+                });
+                alert('✅ Active job cleared');
+            } catch (error) {
+                console.error('Error clearing active job:', error);
+                alert('Error clearing active job');
             }
         };
 
