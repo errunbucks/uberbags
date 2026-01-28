@@ -430,8 +430,6 @@
                 // Update current destination display
                 if (data.currentDestination) {
                     currentDestination = data.currentDestination;
-                    document.getElementById('currentDestinationDisplay').style.display = 'block';
-                    document.getElementById('currentDestText').textContent = data.currentDestination.address;
 
                     // Update destination marker
                     if (!destinationMarker) {
@@ -452,7 +450,6 @@
                     }
                 } else {
                     currentDestination = null;
-                    document.getElementById('currentDestinationDisplay').style.display = 'none';
 
                     // Clear route and destination marker
                     if (routeLine) {
