@@ -677,6 +677,7 @@
             if (!activeJobId) return;
 
             try {
+                const activeJob = jobs.find(j => j.id === activeJobId);
                 const updatedJobs = jobs.map(j =>
                     j.id === activeJobId ? { ...j, status: 'completed' } : j
                 );
@@ -684,6 +685,11 @@
                 await updateDoc(doc(db, 'game', 'current'), {
                     currentDestination: null,
                     activeJobId: null,
+                    jobResult: {
+                        status: 'completed',
+                        message: activeJob?.successMessage || 'Great job! Task completed.',
+                        timestamp: Date.now()
+                    },
                     jobs: updatedJobs
                 });
 
@@ -699,6 +705,7 @@
             if (!activeJobId) return;
 
             try {
+                const activeJob = jobs.find(j => j.id === activeJobId);
                 const updatedJobs = jobs.map(j =>
                     j.id === activeJobId ? { ...j, status: 'failed' } : j
                 );
@@ -706,6 +713,11 @@
                 await updateDoc(doc(db, 'game', 'current'), {
                     currentDestination: null,
                     activeJobId: null,
+                    jobResult: {
+                        status: 'failed',
+                        message: activeJob?.failureMessage || 'Task failed. Better luck next time!',
+                        timestamp: Date.now()
+                    },
                     jobs: updatedJobs
                 });
 

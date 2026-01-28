@@ -293,7 +293,7 @@
         const editModeData = localStorage.getItem('editMode');
         if (editModeData) {
             editMode = JSON.parse(editModeData);
-            localStorage.removeItem('editMode'); // Clear it
+            // Don't clear localStorage yet - we need it for updateQueueItem()
 
             // Update UI for edit mode
             document.getElementById('pageTitle').textContent = 'Edit Job';
@@ -774,6 +774,7 @@
 
                 await updateDoc(docRef, { jobs: updatedJobs });
 
+                localStorage.removeItem('editMode'); // Clear after successful update
                 alert('✅ Updated!');
                 window.location.href = 'organizer.html';
             } catch (error) {
