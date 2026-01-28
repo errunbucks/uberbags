@@ -638,6 +638,13 @@
                             ${job.status === 'pending' ? `<button class="queue-item-btn" onclick="sendJobToDriver('${job.id}')">▶️ Send to Driver</button>` : ''}
                             ${job.status !== 'active' ? `<button class="queue-item-btn" onclick="editJob('${job.id}')">Edit</button>` : ''}
                             ${job.status === 'pending' ? `<button class="queue-item-btn delete" onclick="deleteJob('${job.id}')">Delete</button>` : ''}
+                            <select class="status-dropdown" onchange="changeJobStatus('${job.id}', this.value)" style="margin-top: 8px; padding: 6px; border-radius: 4px; border: 1px solid #ddd; font-size: 13px; cursor: pointer;">
+                                <option value="">Change Status...</option>
+                                <option value="pending" ${job.status === 'pending' ? 'disabled' : ''}>Pending</option>
+                                <option value="active" ${job.status === 'active' ? 'disabled' : ''}>Active</option>
+                                <option value="completed" ${job.status === 'completed' ? 'disabled' : ''}>Completed</option>
+                                <option value="failed" ${job.status === 'failed' ? 'disabled' : ''}>Failed</option>
+                            </select>
                         </div>
                     </div>
                 `;
@@ -754,6 +761,54 @@
             } catch (error) {
                 console.error('Error deleting job:', error);
                 alert('Error deleting job');
+            }
+        };
+
+        // Change job status
+        window.changeJobStatus = async function(jobId, newStatus) {
+            if (!newStatus) return; // User selected "Change Status..." option
+
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            try {
+                const updatedJobs = jobs.map(j =>
+                    j.id === jobId ? { ...j, status: newStatus } : j
+                );
+
+                const updateData = { jobs: updatedJobs };
+
+                // If changing to active, set as current destination and start timer
+                if (newStatus === 'active') {
+                    updateData.currentDestination = { ...job, status: 'active', startTime: Date.now() };
+                    updateData.activeJobId = jobId;
+                }
+
+                // If changing from active to something else, clear current destination
+                if (job.status === 'active' && newStatus !== 'active') {
+                    updateData.currentDestination = null;
+                    updateData.activeJobId = null;
+
+                    // If completing or failing, add result message
+                    if (newStatus === 'completed') {
+                        updateData.jobResult = {
+                            status: 'completed',
+                            message: job.successMessage || 'Great job!',
+                            timestamp: Date.now()
+                        };
+                    } else if (newStatus === 'failed') {
+                        updateData.jobResult = {
+                            status: 'failed',
+                            message: job.failureMessage || 'Better luck next time!',
+                            timestamp: Date.now()
+                        };
+                    }
+                }
+
+                await updateDoc(doc(db, 'game', 'current'), updateData);
+            } catch (error) {
+                console.error('Error changing status:', error);
+                alert('Error changing status');
             }
         };
 
