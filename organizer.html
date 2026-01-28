@@ -593,15 +593,23 @@
         function renderJobList() {
             const jobList = document.getElementById('jobList');
 
-            if (jobs.length === 0) {
+            console.log('Rendering jobs:', jobs); // Debug log
+
+            if (!jobs || jobs.length === 0) {
                 jobList.innerHTML = '<p class="info-text">No jobs yet. Add one to get started!</p>';
                 return;
             }
 
+            // Ensure all jobs have a status (for backwards compatibility)
+            const jobsWithStatus = jobs.map(job => ({
+                ...job,
+                status: job.status || 'pending'
+            }));
+
             // Sort: active first, then pending, then completed/failed
-            const sortedJobs = [...jobs].sort((a, b) => {
+            const sortedJobs = [...jobsWithStatus].sort((a, b) => {
                 const order = { active: 0, pending: 1, completed: 2, failed: 3 };
-                return order[a.status] - order[b.status];
+                return (order[a.status] || 1) - (order[b.status] || 1);
             });
 
             jobList.innerHTML = sortedJobs.map((job) => {
