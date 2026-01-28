@@ -256,7 +256,7 @@
         </div>
 
         <button class="btn" id="primaryBtn" onclick="addToQueue()">➕ Add Job</button>
-        <button class="btn" onclick="goBack()" style="background: #666; margin-top: 12px;">Cancel</button>
+        <button class="btn" id="cancelBtn" style="background: #666; margin-top: 12px;">Cancel</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -776,7 +776,6 @@
                 await updateDoc(docRef, { jobs: updatedJobs });
 
                 localStorage.removeItem('editMode'); // Clear after successful update
-                alert('✅ Updated!');
                 window.location.href = 'organizer.html';
             } catch (error) {
                 console.error('Error updating:', error);
@@ -859,6 +858,11 @@
         window.goBack = function() {
             window.location.href = 'organizer.html';
         };
+
+        // Add event listeners for buttons (since onclick in HTML doesn't work well with modules)
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            window.location.href = 'organizer.html';
+        });
     </script>
 </body>
 </html>
