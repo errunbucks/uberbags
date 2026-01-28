@@ -572,56 +572,28 @@
     <div id="destinationCard" class="destination-card hidden">
         <div class="card-handle" onclick="toggleCard()"></div>
 
-        <!-- Job Alert View (shown before starting) -->
-        <div id="jobPendingView" class="job-status-pending">
-            <div class="job-alert-header">
-                <div class="job-alert-badge">NEW JOB ALERT!</div>
-                <div class="job-title" id="jobTitle">Loading...</div>
-                <div class="job-subtitle" id="jobAddress">Loading...</div>
-            </div>
-
-            <div class="card-content">
-                <div id="jobDescription" class="job-description-section">
-                    <div class="job-description-label">JOB DESCRIPTION:</div>
-                    <div class="job-description-text" id="jobDescriptionText">Loading...</div>
-                </div>
-
-                <div id="timeLimitSection" class="time-limit-section">
-                    <div class="time-limit-label">TIME LIMIT:</div>
-                    <div class="time-limit-value" id="timeLimitDisplay">--:--</div>
-                    <div class="time-limit-subtext" id="timeLimitSubtext">You have XX to complete task</div>
-                </div>
-
-                <button class="start-job-btn" onclick="startJob()">START JOB</button>
-                <div class="info-text" style="text-align: center; margin-top: 12px;">
-                    You have <span id="timeForJob">15 minutes</span> to complete task
-                </div>
-            </div>
+        <div class="job-alert-header">
+            <div class="job-alert-badge">ACTIVE JOB</div>
+            <div class="job-title" id="jobTitle">Loading...</div>
+            <div class="job-subtitle" id="jobAddress">Loading...</div>
         </div>
 
-        <!-- Active Job View (shown during countdown) -->
-        <div id="jobActiveView" class="job-status-active" style="display: none;">
-            <div class="card-handle" onclick="toggleCard()"></div>
+        <div class="card-content">
+            <img id="jobGif" class="rider-gif" style="display: none; margin-bottom: 16px;" src="" alt="">
 
-            <div class="card-summary" onclick="toggleCard()">
-                <div class="card-summary-name" id="summaryName">Active Job</div>
-                <div class="card-summary-address" id="summaryAddress">Loading...</div>
+            <div id="jobDescription" class="job-description-section">
+                <div class="job-description-label">JOB DESCRIPTION:</div>
+                <div class="job-description-text" id="jobDescriptionText">Loading...</div>
             </div>
 
-            <div class="card-content">
-                <img id="jobGif" class="rider-gif" style="display: none; margin-bottom: 16px;" src="" alt="">
+            <div class="destination-hint" id="destinationHint" style="display: none;">
+                <strong>Hint:</strong>
+                <span id="hintText"></span>
+            </div>
 
-                <div class="destination-header">DESTINATION</div>
-                <div class="destination-address" id="destinationAddress">Loading...</div>
-                <div class="destination-hint" id="destinationHint" style="display: none;">
-                    <strong>Hint:</strong>
-                    <span id="hintText"></span>
-                </div>
-                <div class="eta-info">
-                    <span id="distance">Calculating...</span>
-                    <span id="eta">ETA: --</span>
-                </div>
-                <button class="complete-job-btn" onclick="completeJob()">JOB COMPLETE</button>
+            <div class="eta-info">
+                <span id="distance">Calculating...</span>
+                <span id="eta">ETA: --</span>
             </div>
         </div>
     </div>
@@ -632,18 +604,6 @@
         <div class="countdown-timer" id="countdownTimer">15:00</div>
         <div class="progress-bar-container">
             <div class="progress-bar" id="progressBar"></div>
-        </div>
-    </div>
-
-    <!-- Result Modal (success/failure) -->
-    <div id="resultModal" class="result-modal" style="display: none;">
-        <div class="result-content">
-            <div class="result-icon" id="resultIcon">
-                <span id="resultIconSymbol">✓</span>
-            </div>
-            <div class="result-title" id="resultTitle">JOB COMPLETE</div>
-            <div class="result-message" id="resultMessage">Great job! You completed the task on time.</div>
-            <button class="result-btn" onclick="closeResultModal()">BACK TO MAP</button>
         </div>
     </div>
 
@@ -720,9 +680,7 @@
                     } else {
                         // Timer expired while away
                         localStorage.removeItem('jobTimerState');
-                        if (currentDestination) {
-                            showResult(false);
-                        }
+                        handleTimerExpired();
                     }
                 }
             }
@@ -811,37 +769,20 @@
             document.getElementById('waitingMessage').style.display = 'none';
             document.getElementById('destinationCard').classList.remove('hidden');
 
-            // Only reset to pending view if job is not currently active
-            if (!jobActive) {
-                document.getElementById('jobPendingView').style.display = 'block';
-                document.getElementById('jobActiveView').style.display = 'none';
-            }
-
             // Extract job info from destination
             const jobTitle = currentDestination.jobTitle || currentDestination.rider?.name || 'Mystery Job';
             const jobDescription = currentDestination.jobDescription || currentDestination.hint || 'Complete the task at this location.';
             const timeLimit = currentDestination.timeLimit || 15; // default 15 minutes
-            const successMessage = currentDestination.successMessage || 'Great job! You completed the task on time.';
-            const failureMessage = currentDestination.failureMessage || 'Time\'s up! You didn\'t complete the task in time.';
 
             // Store for later use
             currentDestination.jobTitle = jobTitle;
             currentDestination.jobDescription = jobDescription;
             currentDestination.timeLimit = timeLimit;
-            currentDestination.successMessage = successMessage;
-            currentDestination.failureMessage = failureMessage;
 
-            // Update pending view
+            // Update job info
             document.getElementById('jobTitle').textContent = jobTitle;
             document.getElementById('jobAddress').textContent = currentDestination.address;
             document.getElementById('jobDescriptionText').textContent = jobDescription;
-            document.getElementById('timeLimitDisplay').textContent = formatTime(timeLimit * 60);
-            document.getElementById('timeLimitSubtext').textContent = `You have ${timeLimit} minute${timeLimit !== 1 ? 's' : ''} to complete task`;
-            document.getElementById('timeForJob').textContent = `${timeLimit} minute${timeLimit !== 1 ? 's' : ''}`;
-
-            // Update active view (for when job starts)
-            document.getElementById('destinationAddress').textContent = currentDestination.address;
-            document.getElementById('summaryAddress').textContent = currentDestination.address;
 
             // Show GIF if exists
             if (currentDestination.gif) {
@@ -856,6 +797,14 @@
                 document.getElementById('hintText').textContent = currentDestination.hint;
             } else {
                 document.getElementById('destinationHint').style.display = 'none';
+            }
+
+            // Auto-start timer if job has been started by organizer
+            if (currentDestination.startTime && !jobActive) {
+                startJobTimer();
+            } else if (!currentDestination.startTime && jobActive) {
+                // Job was stopped by organizer
+                stopJobTimer();
             }
 
             // Update destination marker
@@ -1013,20 +962,16 @@
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
-        // Start the job timer
-        window.startJob = function() {
-            if (!currentDestination) return;
+        // Start the job timer (triggered automatically when organizer sends job)
+        function startJobTimer() {
+            if (!currentDestination || jobActive) return;
 
             jobActive = true;
             jobTimeLimit = (currentDestination.timeLimit || 15) * 60; // convert to seconds
-            jobStartTime = Date.now();
+            jobStartTime = currentDestination.startTime; // Use organizer's start time
 
             // Save state to localStorage
             saveTimerState();
-
-            // Hide pending view, show active view
-            document.getElementById('jobPendingView').style.display = 'none';
-            document.getElementById('jobActiveView').style.display = 'block';
 
             // Show countdown overlay
             document.getElementById('countdownOverlay').style.display = 'block';
@@ -1050,7 +995,29 @@
             // Start timer
             updateTimer();
             timerInterval = setInterval(updateTimer, 1000);
-        };
+        }
+
+        // Stop the job timer (triggered when organizer completes/fails job)
+        function stopJobTimer() {
+            if (!jobActive) return;
+
+            jobActive = false;
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            // Clear saved state
+            saveTimerState();
+
+            // Hide countdown overlay
+            document.getElementById('countdownOverlay').style.display = 'none';
+
+            // Stop navigation
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+            isNavigating = false;
+        }
 
         function updateTimer() {
             if (!jobActive) return;
@@ -1075,72 +1042,15 @@
 
             // Check if time's up
             if (remaining === 0) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                showResult(false);
+                handleTimerExpired();
             }
         }
 
-        // Complete the job
-        window.completeJob = function() {
-            if (!jobActive) return;
-
-            clearInterval(timerInterval);
-            timerInterval = null;
-
-            const elapsed = Math.floor((Date.now() - jobStartTime) / 1000);
-            const remaining = jobTimeLimit - elapsed;
-
-            // Success if time remaining
-            showResult(remaining > 0);
-        };
-
-        function showResult(success) {
-            jobActive = false;
-
-            // Clear saved state
-            saveTimerState();
-
-            // Hide countdown overlay
-            document.getElementById('countdownOverlay').style.display = 'none';
-
-            // Show result modal
-            const modal = document.getElementById('resultModal');
-            const icon = document.getElementById('resultIcon');
-            const iconSymbol = document.getElementById('resultIconSymbol');
-            const title = document.getElementById('resultTitle');
-            const message = document.getElementById('resultMessage');
-
-            if (success) {
-                icon.className = 'result-icon success';
-                iconSymbol.textContent = '✓';
-                title.textContent = 'JOB COMPLETE';
-                message.textContent = currentDestination.successMessage || 'Great job! You completed the task on time.';
-            } else {
-                icon.className = 'result-icon failure';
-                iconSymbol.textContent = '✕';
-                title.textContent = 'DELIVERY FAILED';
-                message.textContent = currentDestination.failureMessage || 'Time\'s up! You didn\'t complete the task in time.';
-            }
-
-            modal.style.display = 'flex';
+        // Timer expiration handling
+        function handleTimerExpired() {
+            // Just stop the timer, organizer will mark as failed
+            stopJobTimer();
         }
-
-        window.closeResultModal = function() {
-            // Hide modal
-            document.getElementById('resultModal').style.display = 'none';
-
-            // Reset job state
-            jobActive = false;
-            jobStartTime = null;
-            jobTimeLimit = null;
-
-            // Clear current destination and show waiting message
-            showWaitingMessage();
-            document.getElementById('destinationCard').classList.add('hidden');
-            document.getElementById('jobPendingView').style.display = 'block';
-            document.getElementById('jobActiveView').style.display = 'none';
-        };
     </script>
 </body>
 </html>
