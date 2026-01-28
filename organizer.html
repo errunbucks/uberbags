@@ -747,6 +747,15 @@
                 }
 
                 await updateDoc(doc(db, 'game', 'current'), updateData);
+
+                // Clear jobResult after 15 seconds so it doesn't show again on page refresh
+                if (newStatus === 'completed' || newStatus === 'failed') {
+                    setTimeout(async () => {
+                        await updateDoc(doc(db, 'game', 'current'), {
+                            jobResult: null
+                        });
+                    }, 15000);
+                }
             } catch (error) {
                 console.error('Error changing status:', error);
                 alert('Error changing status');
