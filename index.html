@@ -607,6 +607,18 @@
         </div>
     </div>
 
+    <!-- Result Modal (success/failure) -->
+    <div id="resultModal" class="result-modal" style="display: none;">
+        <div class="result-content">
+            <div class="result-icon" id="resultIcon">
+                <span id="resultIconSymbol">✓</span>
+            </div>
+            <div class="result-title" id="resultTitle">JOB COMPLETE</div>
+            <div class="result-message" id="resultMessage">Great job! You completed the task on time.</div>
+            <button class="result-btn" onclick="closeResultModal()">BACK TO MAP</button>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -747,21 +759,37 @@
 
         // Track if this is the first load
         let isFirstLoad = true;
+        let lastResultTimestamp = null;
 
         // Listen for destination updates
         onSnapshot(doc(db, 'game', 'current'), (doc) => {
             const data = doc.data();
-            if (data && data.currentDestination) {
-                currentDestination = data.currentDestination;
-                updateDestinationUI();
 
-                // Only restore timer on first load
-                if (isFirstLoad) {
-                    restoreTimerState();
-                    isFirstLoad = false;
+            // Check for job result (completed/failed by organizer)
+            if (data?.jobResult && data.jobResult.timestamp !== lastResultTimestamp) {
+                lastResultTimestamp = data.jobResult.timestamp;
+                showResultModal(data.jobResult.status, data.jobResult.message);
+            }
+
+            // Check if current destination was removed (job completed/failed)
+            if (!data || !data.currentDestination) {
+                // Job was completed or failed by organizer
+                if (jobActive) {
+                    // Stop the timer
+                    stopJobTimer();
                 }
-            } else {
                 showWaitingMessage();
+                return;
+            }
+
+            // New or updated destination
+            currentDestination = data.currentDestination;
+            updateDestinationUI();
+
+            // Only restore timer on first load
+            if (isFirstLoad) {
+                restoreTimerState();
+                isFirstLoad = false;
             }
         });
 
@@ -1011,6 +1039,9 @@
             // Hide countdown overlay
             document.getElementById('countdownOverlay').style.display = 'none';
 
+            // Expand the card
+            document.getElementById('destinationCard').classList.remove('minimized');
+
             // Stop navigation
             if (routeLine) {
                 map.removeLayer(routeLine);
@@ -1051,6 +1082,34 @@
             // Just stop the timer, organizer will mark as failed
             stopJobTimer();
         }
+
+        // Show result modal (completed/failed)
+        window.showResultModal = function(status, message) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
+            const iconSymbol = document.getElementById('resultIconSymbol');
+            const title = document.getElementById('resultTitle');
+            const messageEl = document.getElementById('resultMessage');
+
+            if (status === 'completed') {
+                icon.className = 'result-icon success';
+                iconSymbol.textContent = '✓';
+                title.textContent = 'JOB COMPLETE';
+                messageEl.textContent = message || 'Great job! You completed the task on time.';
+            } else {
+                icon.className = 'result-icon failure';
+                iconSymbol.textContent = '✗';
+                title.textContent = 'JOB FAILED';
+                messageEl.textContent = message || 'Time ran out! Better luck next time.';
+            }
+
+            modal.style.display = 'flex';
+        };
+
+        // Close result modal
+        window.closeResultModal = function() {
+            document.getElementById('resultModal').style.display = 'none';
+        };
     </script>
 </body>
 </html>
