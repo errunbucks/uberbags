@@ -291,10 +291,6 @@
                     <span class="status-value" id="lastUpdate">--</span>
                 </div>
             </div>
-            <div id="activeJobControls" style="display: none; gap: 8px; margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr;">
-                <button class="btn" onclick="completeJob()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">✓ Complete</button>
-                <button class="btn btn-danger" onclick="failJob()">✕ Failed</button>
-            </div>
         </div>
 
         <div class="section">
@@ -478,10 +474,8 @@
                     const activeJob = jobs.find(j => j.id === activeJobId);
                     document.getElementById('activeJobName').textContent =
                         activeJob ? activeJob.jobTitle : 'Unknown Job';
-                    document.getElementById('activeJobControls').style.display = 'grid';
                 } else {
                     document.getElementById('activeJobName').textContent = 'None';
-                    document.getElementById('activeJobControls').style.display = 'none';
                 }
 
                 isInitialLoad = false;
@@ -676,62 +670,6 @@
             } catch (error) {
                 console.error('Error sending job:', error);
                 alert('Error sending job to driver');
-            }
-        };
-
-        // Complete the active job
-        window.completeJob = async function() {
-            if (!activeJobId) return;
-
-            try {
-                const activeJob = jobs.find(j => j.id === activeJobId);
-                const updatedJobs = jobs.map(j =>
-                    j.id === activeJobId ? { ...j, status: 'completed' } : j
-                );
-
-                await updateDoc(doc(db, 'game', 'current'), {
-                    currentDestination: null,
-                    activeJobId: null,
-                    jobResult: {
-                        status: 'completed',
-                        message: activeJob?.successMessage || 'Great job! Task completed.',
-                        timestamp: Date.now()
-                    },
-                    jobs: updatedJobs
-                });
-
-                alert('✅ Job completed!');
-            } catch (error) {
-                console.error('Error completing job:', error);
-                alert('Error completing job');
-            }
-        };
-
-        // Mark the active job as failed
-        window.failJob = async function() {
-            if (!activeJobId) return;
-
-            try {
-                const activeJob = jobs.find(j => j.id === activeJobId);
-                const updatedJobs = jobs.map(j =>
-                    j.id === activeJobId ? { ...j, status: 'failed' } : j
-                );
-
-                await updateDoc(doc(db, 'game', 'current'), {
-                    currentDestination: null,
-                    activeJobId: null,
-                    jobResult: {
-                        status: 'failed',
-                        message: activeJob?.failureMessage || 'Task failed. Better luck next time!',
-                        timestamp: Date.now()
-                    },
-                    jobs: updatedJobs
-                });
-
-                alert('❌ Job marked as failed');
-            } catch (error) {
-                console.error('Error failing job:', error);
-                alert('Error marking job as failed');
             }
         };
 
