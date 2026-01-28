@@ -300,7 +300,7 @@
             document.getElementById('pageTitle').textContent = 'Edit Job';
 
             // Populate form with existing data
-            const data = editMode.data;
+            const data = editMode.data || editMode;
             document.getElementById('jobTitleInput').value = data.jobTitle || '';
             document.getElementById('addressInput').value = data.address || '';
             document.getElementById('jobDescriptionInput').value = data.jobDescription || '';
@@ -331,16 +331,9 @@
             document.getElementById('selectedLocationText').textContent = data.address;
 
             // Update buttons
-            if (editMode.type === 'current') {
-                document.getElementById('primaryBtn').textContent = '💾 Update Current Destination';
-                document.getElementById('primaryBtn').setAttribute('onclick', 'updateCurrentDestination()');
-                document.getElementById('secondaryBtn').style.display = 'none';
-            } else {
-                document.getElementById('primaryBtn').textContent = '💾 Update in Queue';
-                document.getElementById('primaryBtn').setAttribute('onclick', 'updateQueueItem()');
-                document.getElementById('secondaryBtn').textContent = '⚡ Send Now Instead';
-                document.getElementById('secondaryBtn').setAttribute('onclick', 'sendNow()');
-            }
+            document.getElementById('primaryBtn').textContent = '💾 Update Job';
+            document.getElementById('primaryBtn').setAttribute('onclick', 'updateQueueItem()');
+            document.getElementById('secondaryBtn').style.display = 'none';
         }
 
         // Google Places Autocomplete
@@ -603,13 +596,15 @@
             }
 
             try {
-                // Get current queue
+                // Get current jobs list
                 const docRef = doc(db, 'game', 'current');
                 const docSnap = await getDoc(docRef);
-                const queue = docSnap.data()?.queue || [];
+                const jobs = docSnap.data()?.jobs || [];
 
-                // Add to queue
-                queue.push({
+                // Create new job with ID and status
+                const newJob = {
+                    id: Date.now().toString(), // Simple ID based on timestamp
+                    status: 'pending',
                     lat: location.lat,
                     lng: location.lng,
                     address: address,
@@ -620,11 +615,13 @@
                     failureMessage: failureMessage || null,
                     hint: hint || null,
                     gif: gif || null
-                });
+                };
 
-                await updateDoc(docRef, { queue: queue });
+                jobs.push(newJob);
 
-                alert(`✅ Added to queue! (${queue.length} total)`);
+                await updateDoc(docRef, { jobs: jobs });
+
+                alert(`✅ Job added! (${jobs.length} total)`);
                 window.location.href = 'organizer.html';
             } catch (error) {
                 console.error('Error adding to queue:', error);
@@ -754,23 +751,29 @@
             try {
                 const docRef = doc(db, 'game', 'current');
                 const docSnap = await getDoc(docRef);
-                const queue = docSnap.data()?.queue || [];
+                const jobs = docSnap.data()?.jobs || [];
 
-                // Update the item
-                queue[editMode.index] = {
-                    lat: location.lat,
-                    lng: location.lng,
-                    address: address,
-                    jobTitle: jobTitle,
-                    jobDescription: jobDescription,
-                    timeLimit: timeLimit,
-                    successMessage: successMessage || null,
-                    failureMessage: failureMessage || null,
-                    hint: hint || null,
-                    gif: gif || null
-                };
+                // Find and update the job
+                const updatedJobs = jobs.map(job => {
+                    if (job.id === editMode.jobId) {
+                        return {
+                            ...job,
+                            lat: location.lat,
+                            lng: location.lng,
+                            address: address,
+                            jobTitle: jobTitle,
+                            jobDescription: jobDescription,
+                            timeLimit: timeLimit,
+                            successMessage: successMessage || null,
+                            failureMessage: failureMessage || null,
+                            hint: hint || null,
+                            gif: gif || null
+                        };
+                    }
+                    return job;
+                });
 
-                await updateDoc(docRef, { queue: queue });
+                await updateDoc(docRef, { jobs: updatedJobs });
 
                 alert('✅ Updated!');
                 window.location.href = 'organizer.html';

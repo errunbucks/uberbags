@@ -460,26 +460,14 @@
                     }
                 }
 
-                // Update jobs list
-                if (data.jobs) {
-                    jobs = data.jobs;
-                    renderJobList();
+                // Update queue
+                if (data.queue) {
+                    destinationQueue = data.queue;
+                    renderQueue();
                 } else if (isInitialLoad) {
-                    // Initialize empty jobs list if doesn't exist
-                    jobs = [];
-                    renderJobList();
-                }
-
-                // Update active job display
-                activeJobId = data.activeJobId || null;
-                if (activeJobId && data.currentDestination) {
-                    const activeJob = jobs.find(j => j.id === activeJobId);
-                    document.getElementById('activeJobName').textContent =
-                        activeJob ? activeJob.jobTitle : 'Unknown Job';
-                    document.getElementById('activeJobControls').style.display = 'grid';
-                } else {
-                    document.getElementById('activeJobName').textContent = 'None';
-                    document.getElementById('activeJobControls').style.display = 'none';
+                    // Initialize empty queue if doesn't exist
+                    destinationQueue = [];
+                    renderQueue();
                 }
 
                 isInitialLoad = false;
@@ -585,155 +573,38 @@
             }
         }
 
-        function renderJobList() {
-            const jobList = document.getElementById('jobList');
+        function renderQueue() {
+            const queueList = document.getElementById('queueList');
+            const queueControls = document.getElementById('queueControls');
 
-            if (jobs.length === 0) {
-                jobList.innerHTML = '<p class="info-text">No jobs yet. Add one to get started!</p>';
+            if (destinationQueue.length === 0) {
+                queueList.innerHTML = '<p class="info-text">No destinations queued. Add some below!</p>';
+                queueControls.style.display = 'none';
                 return;
             }
 
-            // Sort: active first, then pending, then completed/failed
-            const sortedJobs = [...jobs].sort((a, b) => {
-                const order = { active: 0, pending: 1, completed: 2, failed: 3 };
-                return order[a.status] - order[b.status];
-            });
+            queueControls.style.display = 'grid';
 
-            jobList.innerHTML = sortedJobs.map((job) => {
-                const statusColors = {
-                    pending: '#6b7280',
-                    active: '#3b82f6',
-                    completed: '#10b981',
-                    failed: '#dc2626'
-                };
-                const statusLabels = {
-                    pending: 'Pending',
-                    active: 'Active',
-                    completed: 'Completed',
-                    failed: 'Failed'
-                };
-
-                return `
-                    <div class="queue-item" style="border-left: 4px solid ${statusColors[job.status]};">
-                        <div>
-                            <span style="display: inline-block; background: ${statusColors[job.status]}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 8px;">${statusLabels[job.status]}</span>
-                            <span class="queue-item-address">${job.jobTitle || job.address}</span>
-                        </div>
-                        <div class="queue-item-hint" style="color: #333;">📍 ${job.address}</div>
-                        ${job.jobDescription ? `<div class="queue-item-hint">📋 ${job.jobDescription}</div>` : ''}
-                        ${job.timeLimit ? `<div class="queue-item-hint">⏱️ ${job.timeLimit} minute${job.timeLimit !== 1 ? 's' : ''}</div>` : ''}
-                        ${job.hint ? `<div class="queue-item-hint">💡 ${job.hint}</div>` : ''}
-                        ${job.gif ? `<div class="queue-item-hint">🎬 Has GIF</div>` : ''}
-                        <div class="queue-item-actions">
-                            ${job.status === 'pending' ? `<button class="queue-item-btn" onclick="sendJobToDriver('${job.id}')">▶️ Send to Driver</button>` : ''}
-                            ${job.status !== 'active' ? `<button class="queue-item-btn" onclick="editJob('${job.id}')">Edit</button>` : ''}
-                            ${job.status === 'pending' ? `<button class="queue-item-btn delete" onclick="deleteJob('${job.id}')">Delete</button>` : ''}
-                        </div>
+            queueList.innerHTML = destinationQueue.map((dest, index) => `
+                <div class="queue-item">
+                    <div>
+                        <span class="queue-item-number">${index + 1}</span>
+                        <span class="queue-item-address">${dest.jobTitle || dest.address}</span>
                     </div>
-                `;
-            }).join('');
+                    <div class="queue-item-hint" style="color: #333;">📍 ${dest.address}</div>
+                    ${dest.jobDescription ? `<div class="queue-item-hint">📋 ${dest.jobDescription}</div>` : ''}
+                    ${dest.timeLimit ? `<div class="queue-item-hint">⏱️ ${dest.timeLimit} minute${dest.timeLimit !== 1 ? 's' : ''}</div>` : ''}
+                    ${dest.hint ? `<div class="queue-item-hint">💡 ${dest.hint}</div>` : ''}
+                    ${dest.gif ? `<div class="queue-item-hint">🎬 Has GIF</div>` : ''}
+                    <div class="queue-item-actions">
+                        <button class="queue-item-btn" onclick="editQueueItem(${index})">Edit</button>
+                        ${index > 0 ? `<button class="queue-item-btn move-up" onclick="moveUp(${index})">↑</button>` : ''}
+                        ${index < destinationQueue.length - 1 ? `<button class="queue-item-btn move-down" onclick="moveDown(${index})">↓</button>` : ''}
+                        <button class="queue-item-btn delete" onclick="removeFromQueue(${index})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
         }
-
-        // Send job to driver (makes it active and starts timer)
-        window.sendJobToDriver = async function(jobId) {
-            const job = jobs.find(j => j.id === jobId);
-            if (!job) return;
-
-            try {
-                // Update job status to active
-                const updatedJobs = jobs.map(j =>
-                    j.id === jobId ? { ...j, status: 'active' } : j
-                );
-
-                // Set as current destination with start time
-                await updateDoc(doc(db, 'game', 'current'), {
-                    currentDestination: {
-                        ...job,
-                        startTime: Date.now()
-                    },
-                    activeJobId: jobId,
-                    jobs: updatedJobs
-                });
-
-                alert('✅ Job sent to driver!');
-            } catch (error) {
-                console.error('Error sending job:', error);
-                alert('Error sending job to driver');
-            }
-        };
-
-        // Complete the active job
-        window.completeJob = async function() {
-            if (!activeJobId) return;
-
-            try {
-                const updatedJobs = jobs.map(j =>
-                    j.id === activeJobId ? { ...j, status: 'completed' } : j
-                );
-
-                await updateDoc(doc(db, 'game', 'current'), {
-                    currentDestination: null,
-                    activeJobId: null,
-                    jobs: updatedJobs
-                });
-
-                alert('✅ Job completed!');
-            } catch (error) {
-                console.error('Error completing job:', error);
-                alert('Error completing job');
-            }
-        };
-
-        // Mark the active job as failed
-        window.failJob = async function() {
-            if (!activeJobId) return;
-
-            try {
-                const updatedJobs = jobs.map(j =>
-                    j.id === activeJobId ? { ...j, status: 'failed' } : j
-                );
-
-                await updateDoc(doc(db, 'game', 'current'), {
-                    currentDestination: null,
-                    activeJobId: null,
-                    jobs: updatedJobs
-                });
-
-                alert('❌ Job marked as failed');
-            } catch (error) {
-                console.error('Error failing job:', error);
-                alert('Error marking job as failed');
-            }
-        };
-
-        // Edit a job
-        window.editJob = function(jobId) {
-            const job = jobs.find(j => j.id === jobId);
-            if (!job) return;
-
-            localStorage.setItem('editMode', JSON.stringify({
-                mode: 'editJob',
-                jobId: jobId,
-                data: job
-            }));
-            window.location.href = 'add-rider.html';
-        };
-
-        // Delete a job
-        window.deleteJob = async function(jobId) {
-            if (!confirm('Delete this job?')) return;
-
-            try {
-                const updatedJobs = jobs.filter(j => j.id !== jobId);
-                await updateDoc(doc(db, 'game', 'current'), {
-                    jobs: updatedJobs
-                });
-                alert('✅ Job deleted');
-            } catch (error) {
-                console.error('Error deleting job:', error);
-                alert('Error deleting job');
-            }
-        };
 
         window.addToQueue = async function() {
             const address = document.getElementById('addressInput').value.trim();
