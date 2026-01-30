@@ -265,6 +265,11 @@
             background: #e0e0e0;
             color: #000;
         }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
@@ -587,6 +592,12 @@
                         ${job.timeLimit ? `<div class="queue-item-hint">⏱️ ${job.timeLimit} minute${job.timeLimit !== 1 ? 's' : ''}</div>` : ''}
                         ${job.hint ? `<div class="queue-item-hint">💡 ${job.hint}</div>` : ''}
                         ${job.gif ? `<div class="queue-item-hint">🎬 Has GIF</div>` : ''}
+                        ${job.status === 'active' && job.startTime ? `
+                            <div id="timer-${job.id}" style="background: rgba(220, 38, 38, 0.1); padding: 12px; border-radius: 6px; margin: 8px 0; text-align: center;">
+                                <div style="font-size: 11px; font-weight: 600; color: #666; margin-bottom: 4px;">TIME REMAINING</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #dc2626;" id="timer-text-${job.id}">--:--</div>
+                            </div>
+                        ` : ''}
                         <div class="queue-item-actions" style="display: flex; flex-direction: column; gap: 8px;">
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                 ${job.status === 'pending' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'active')" style="background: #3b82f6; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Active</button>` : ''}
@@ -613,7 +624,35 @@
 
             // Render other jobs in the list
             jobList.innerHTML = sortedOtherJobs.map(renderJob).join('');
+
+            // Update timer if there's an active job
+            updateActiveTimer();
         }
+
+        // Update the active job timer display
+        function updateActiveTimer() {
+            const activeJob = jobs.find(j => j.status === 'active');
+            if (activeJob && activeJob.startTime) {
+                const timerElement = document.getElementById(`timer-text-${activeJob.id}`);
+                if (timerElement) {
+                    const elapsed = Math.floor((Date.now() - activeJob.startTime) / 1000);
+                    const timeLimit = (activeJob.timeLimit || 15) * 60; // in seconds
+                    const remaining = Math.max(0, timeLimit - elapsed);
+
+                    const minutes = Math.floor(remaining / 60);
+                    const seconds = remaining % 60;
+                    timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                    // Change color when under 1 minute
+                    if (remaining <= 60 && remaining > 0) {
+                        timerElement.style.animation = 'pulse 1s infinite';
+                    }
+                }
+            }
+        }
+
+        // Update timer every second
+        setInterval(updateActiveTimer, 1000);
 
         // Send job to driver (makes it active and starts timer)
         window.sendJobToDriver = async function(jobId) {
