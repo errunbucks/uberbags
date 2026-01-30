@@ -947,9 +947,35 @@
         }
 
         // Timer expiration handling
-        function handleTimerExpired() {
-            // Just stop the timer, organizer will mark as failed
+        async function handleTimerExpired() {
+            if (!jobActive) return;
+
             stopJobTimer();
+
+            // Auto-fail the job in Firebase
+            try {
+                const currentDoc = doc(db, 'game', 'current');
+                await updateDoc(currentDoc, {
+                    currentDestination: null,
+                    jobResult: {
+                        status: 'failed',
+                        message: 'Time expired!',
+                        timestamp: Date.now()
+                    }
+                });
+
+                // Also update the job in the jobs array
+                if (currentDestination && currentDestination.id) {
+                    const jobDoc = doc(db, 'jobs', currentDestination.id);
+                    await updateDoc(jobDoc, {
+                        status: 'failed'
+                    });
+                }
+
+                showResultModal('failed', 'Time expired!');
+            } catch (error) {
+                console.error('Error auto-failing job:', error);
+            }
         }
 
         // Show result overlay (completed/failed)

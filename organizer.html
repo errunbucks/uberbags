@@ -427,17 +427,6 @@
                 // Update jobs list
                 if (data.jobs) {
                     jobs = data.jobs;
-
-                    // Copy startTime from currentDestination to active job if needed
-                    if (data.currentDestination && data.currentDestination.startTime && data.activeJobId) {
-                        jobs = jobs.map(job => {
-                            if (job.id === data.activeJobId && !job.startTime) {
-                                return { ...job, startTime: data.currentDestination.startTime };
-                            }
-                            return job;
-                        });
-                    }
-
                     renderJobList();
                 } else if (isInitialLoad) {
                     // Initialize empty jobs list if doesn't exist
@@ -603,7 +592,7 @@
                         ${job.timeLimit ? `<div class="queue-item-hint">⏱️ ${job.timeLimit} minute${job.timeLimit !== 1 ? 's' : ''}</div>` : ''}
                         ${job.hint ? `<div class="queue-item-hint">💡 ${job.hint}</div>` : ''}
                         ${job.gif ? `<div class="queue-item-hint">🎬 Has GIF</div>` : ''}
-                        ${job.status === 'active' && job.startTime ? `
+                        ${job.status === 'active' && currentDestination && currentDestination.startTime ? `
                             <div id="timer-${job.id}" style="background: rgba(220, 38, 38, 0.1); padding: 12px; border-radius: 6px; margin: 8px 0; text-align: center;">
                                 <div style="font-size: 11px; font-weight: 600; color: #666; margin-bottom: 4px;">TIME REMAINING</div>
                                 <div style="font-size: 24px; font-weight: 700; color: #dc2626;" id="timer-text-${job.id}">--:--</div>
@@ -642,37 +631,41 @@
 
         // Update the active job timer display
         function updateActiveTimer() {
+            // Only update timer if we have currentDestination with startTime
+            if (!currentDestination || !currentDestination.startTime) {
+                console.log('No currentDestination or startTime');
+                return;
+            }
+
             const activeJob = jobs.find(j => j.status === 'active');
-            console.log('Active job:', activeJob);
+            if (!activeJob) {
+                console.log('No active job');
+                return;
+            }
 
-            if (activeJob) {
-                console.log('Active job startTime:', activeJob.startTime);
-                console.log('currentDestination:', currentDestination);
+            const timerElement = document.getElementById(`timer-text-${activeJob.id}`);
+            if (!timerElement) {
+                console.log('Timer element not found for job:', activeJob.id);
+                return;
+            }
 
-                // Get startTime from currentDestination if not in job
-                const startTime = activeJob.startTime || (currentDestination && currentDestination.startTime);
-                console.log('Using startTime:', startTime);
+            console.log('currentDestination.startTime:', currentDestination.startTime);
+            console.log('Date.now():', Date.now());
+            console.log('activeJob.timeLimit:', activeJob.timeLimit);
 
-                if (startTime) {
-                    const timerElement = document.getElementById(`timer-text-${activeJob.id}`);
-                    console.log('Timer element:', timerElement);
+            const elapsed = Math.floor((Date.now() - currentDestination.startTime) / 1000);
+            const timeLimit = (activeJob.timeLimit || 15) * 60; // in seconds
+            const remaining = Math.max(0, timeLimit - elapsed);
 
-                    if (timerElement) {
-                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                        const timeLimit = (activeJob.timeLimit || 15) * 60; // in seconds
-                        const remaining = Math.max(0, timeLimit - elapsed);
+            console.log('elapsed:', elapsed, 'timeLimit:', timeLimit, 'remaining:', remaining);
 
-                        const minutes = Math.floor(remaining / 60);
-                        const seconds = remaining % 60;
-                        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                        console.log('Timer updated:', `${minutes}:${seconds.toString().padStart(2, '0')}`);
+            const minutes = Math.floor(remaining / 60);
+            const seconds = remaining % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-                        // Change color when under 1 minute
-                        if (remaining <= 60 && remaining > 0) {
-                            timerElement.style.animation = 'pulse 1s infinite';
-                        }
-                    }
-                }
+            // Change color when under 1 minute
+            if (remaining <= 60 && remaining > 0) {
+                timerElement.style.animation = 'pulse 1s infinite';
             }
         }
 
