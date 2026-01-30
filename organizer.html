@@ -427,6 +427,17 @@
                 // Update jobs list
                 if (data.jobs) {
                     jobs = data.jobs;
+
+                    // Copy startTime from currentDestination to active job if needed
+                    if (data.currentDestination && data.currentDestination.startTime && data.activeJobId) {
+                        jobs = jobs.map(job => {
+                            if (job.id === data.activeJobId && !job.startTime) {
+                                return { ...job, startTime: data.currentDestination.startTime };
+                            }
+                            return job;
+                        });
+                    }
+
                     renderJobList();
                 } else if (isInitialLoad) {
                     // Initialize empty jobs list if doesn't exist
