@@ -631,14 +631,15 @@
                         ${job.gif ? `<div class="queue-item-hint">🎬 Has GIF</div>` : ''}
                         <div class="queue-item-actions" style="display: flex; flex-direction: column; gap: 8px;">
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                ${job.status !== 'pending' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'pending')" style="background: #6b7280; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Pending</button>` : ''}
-                                ${job.status !== 'active' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'active')" style="background: #3b82f6; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Active</button>` : ''}
-                                ${job.status !== 'completed' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'completed')" style="background: #10b981; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Complete</button>` : ''}
-                                ${job.status !== 'failed' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'failed')" style="background: #dc2626; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Fail</button>` : ''}
+                                ${job.status === 'pending' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'active')" style="background: #3b82f6; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Active</button>` : ''}
+                                ${job.status === 'active' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'completed')" style="background: #10b981; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Complete</button>` : ''}
+                                ${job.status === 'active' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'failed')" style="background: #dc2626; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Fail</button>` : ''}
+                                ${job.status === 'completed' || job.status === 'failed' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'pending')" style="background: #6b7280; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Pending</button>` : ''}
+                                ${job.status === 'completed' || job.status === 'failed' ? `<button class="status-btn" onclick="changeJobStatus('${job.id}', 'active')" style="background: #3b82f6; color: white; flex: 1; min-width: 70px; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Active</button>` : ''}
                             </div>
                             <div style="display: flex; gap: 6px;">
-                                ${job.status !== 'active' ? `<button class="queue-item-btn" onclick="editJob('${job.id}')" style="flex: 1;">Edit</button>` : ''}
-                                ${job.status === 'pending' ? `<button class="queue-item-btn delete" onclick="deleteJob('${job.id}')" style="flex: 1;">Delete</button>` : ''}
+                                <button class="queue-item-btn" onclick="editJob('${job.id}')" style="flex: 1; background: #f3f4f6; color: #6b7280; font-size: 11px;">Edit</button>
+                                <button class="queue-item-btn delete" onclick="deleteJob('${job.id}')" style="flex: 1; background: #fee2e2; color: #dc2626; font-size: 11px;">Delete</button>
                             </div>
                         </div>
                     </div>

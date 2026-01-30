@@ -771,6 +771,18 @@
         function showWaitingMessage() {
             document.getElementById('waitingState').style.display = 'block';
             document.getElementById('activeJobState').style.display = 'none';
+
+            // Remove destination marker when no active job
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+                destinationMarker = null;
+            }
+
+            // Remove route line when no active job
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
         }
 
         async function updateRoute() {
