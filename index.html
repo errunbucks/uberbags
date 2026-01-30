@@ -909,6 +909,13 @@
                 map.removeLayer(routeLine);
                 routeLine = null;
             }
+
+            // Remove destination marker
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+                destinationMarker = null;
+            }
+
             isNavigating = false;
         }
 
