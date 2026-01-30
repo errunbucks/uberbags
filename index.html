@@ -485,7 +485,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, doc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, onSnapshot, updateDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -955,22 +955,27 @@
             // Auto-fail the job in Firebase
             try {
                 const currentDoc = doc(db, 'game', 'current');
+                const docSnap = await getDoc(currentDoc);
+                const data = docSnap.data();
+
+                // Update the job status in the jobs array
+                let updatedJobs = data.jobs || [];
+                if (currentDestination && currentDestination.id) {
+                    updatedJobs = updatedJobs.map(job =>
+                        job.id === currentDestination.id ? { ...job, status: 'failed' } : job
+                    );
+                }
+
                 await updateDoc(currentDoc, {
                     currentDestination: null,
+                    activeJobId: null,
+                    jobs: updatedJobs,
                     jobResult: {
                         status: 'failed',
                         message: 'Time expired!',
                         timestamp: Date.now()
                     }
                 });
-
-                // Also update the job in the jobs array
-                if (currentDestination && currentDestination.id) {
-                    const jobDoc = doc(db, 'jobs', currentDestination.id);
-                    await updateDoc(jobDoc, {
-                        status: 'failed'
-                    });
-                }
 
                 showResultModal('failed', 'Time expired!');
             } catch (error) {
