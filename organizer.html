@@ -278,25 +278,12 @@
         <button class="btn" onclick="goToAddRider()" style="margin-bottom: 20px;">➕ Add New Job</button>
 
         <div class="section">
-            <div class="section-title">Current Status</div>
-            <div class="status-card">
-                <div class="status-row">
-                    <span class="status-label">Active Job</span>
-                    <span class="status-value" id="activeJobName">None</span>
-                </div>
-                <div class="status-row">
-                    <span class="status-label">Driver Location</span>
-                    <span class="status-value" id="driverStatus">Waiting for GPS...</span>
-                </div>
-                <div class="status-row">
-                    <span class="status-label">Last Update</span>
-                    <span class="status-value" id="lastUpdate">--</span>
-                </div>
-            </div>
+            <div class="section-title">Active Job</div>
+            <div id="activeJobCard"></div>
         </div>
 
         <div class="section">
-            <div class="section-title">All Jobs</div>
+            <div class="section-title">Old/New Jobs</div>
             <div id="jobList"></div>
         </div>
     </div>
@@ -391,25 +378,9 @@
                         driverMarker.setLatLng([data.driverLocation.lat, data.driverLocation.lng]);
                     }
 
-                    document.getElementById('driverStatus').textContent =
-                        `${data.driverLocation.lat.toFixed(5)}, ${data.driverLocation.lng.toFixed(5)}`;
-
                     // Update route if we have a destination
                     if (currentDestination) {
                         updateRoute();
-                    }
-                }
-
-                // Update last update time
-                if (data.lastUpdate) {
-                    const updateTime = new Date(data.lastUpdate);
-                    const now = new Date();
-                    const diffSeconds = Math.floor((now - updateTime) / 1000);
-
-                    if (diffSeconds < 60) {
-                        document.getElementById('lastUpdate').textContent = `${diffSeconds}s ago`;
-                    } else {
-                        document.getElementById('lastUpdate').textContent = `${Math.floor(diffSeconds / 60)}m ago`;
                     }
                 }
 
@@ -458,15 +429,8 @@
                     renderJobList();
                 }
 
-                // Update active job display
+                // Update active job ID
                 activeJobId = data.activeJobId || null;
-                if (activeJobId && data.currentDestination) {
-                    const activeJob = jobs.find(j => j.id === activeJobId);
-                    document.getElementById('activeJobName').textContent =
-                        activeJob ? activeJob.jobTitle : 'Unknown Job';
-                } else {
-                    document.getElementById('activeJobName').textContent = 'None';
-                }
 
                 isInitialLoad = false;
             }
@@ -588,13 +552,17 @@
                 status: job.status || 'pending'
             }));
 
-            // Sort: active first, then pending, then completed/failed
-            const sortedJobs = [...jobsWithStatus].sort((a, b) => {
-                const order = { active: 0, pending: 1, completed: 2, failed: 3 };
+            // Separate active job from others
+            const activeJob = jobsWithStatus.find(job => job.status === 'active');
+            const otherJobs = jobsWithStatus.filter(job => job.status !== 'active');
+
+            // Sort other jobs: pending first, then completed/failed
+            const sortedOtherJobs = otherJobs.sort((a, b) => {
+                const order = { pending: 0, completed: 1, failed: 2 };
                 return (order[a.status] || 1) - (order[b.status] || 1);
             });
 
-            jobList.innerHTML = sortedJobs.map((job) => {
+            const renderJob = (job) => {
                 const statusColors = {
                     pending: '#6b7280',
                     active: '#3b82f6',
@@ -633,7 +601,18 @@
                         </div>
                     </div>
                 `;
-            }).join('');
+            };
+
+            // Render active job in its section
+            const activeJobCard = document.getElementById('activeJobCard');
+            if (activeJob) {
+                activeJobCard.innerHTML = renderJob(activeJob);
+            } else {
+                activeJobCard.innerHTML = '<div style="color: #999; font-style: italic; padding: 16px 0;">No active job</div>';
+            }
+
+            // Render other jobs in the list
+            jobList.innerHTML = sortedOtherJobs.map(renderJob).join('');
         }
 
         // Send job to driver (makes it active and starts timer)
